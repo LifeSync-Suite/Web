@@ -11,12 +11,11 @@
     "lint:fix": "next lint --fix",
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\"",
     "build:icons": "tsx src/assets/iconify-icons/bundle-icons-css.ts",
-    "migrate": "dotenv -e .env -- npx prisma migrate dev",
-    "postinstall": "prisma generate && npm run build:icons",
+    "generate:api": "openapi-generator-cli generate",
+    "postinstall": "npm run build:icons && npm run generate:api",
     "removeI18n": "tsx src/remove-translation-scripts/index.ts"
   },
   "dependencies": {
-    "@auth/prisma-adapter": "2.4.1",
     "@emoji-mart/data": "1.2.1",
     "@emoji-mart/react": "1.1.1",
     "@emotion/cache": "11.13.0",
@@ -36,10 +35,13 @@
     "@mui/lab": "5.0.0-alpha.172",
     "@mui/material": "5.16.4",
     "@mui/material-nextjs": "5.16.4",
-    "@prisma/client": "5.17.0",
     "@reduxjs/toolkit": "2.2.6",
     "@tanstack/match-sorter-utils": "8.15.1",
+    "@tanstack/react-query": "^5.61.5",
     "@tanstack/react-table": "8.19.3",
+    "axios": "^1.7.9",
+    "axios-auth-refresh": "^3.3.6",
+    "cookies-next": "^4.3.0",
     "@tiptap/extension-color": "^2.5.6",
     "@tiptap/extension-list-item": "^2.5.6",
     "@tiptap/extension-placeholder": "^2.5.6",
@@ -60,7 +62,6 @@
     "mapbox-gl": "3.5.2",
     "negotiator": "0.6.3",
     "next": "14.2.5",
-    "next-auth": "4.24.7",
     "react": "18.3.1",
     "react-apexcharts": "1.4.1",
     "react-colorful": "5.6.1",
@@ -83,6 +84,8 @@
     "@iconify/tools": "4.0.4",
     "@iconify/types": "2.0.0",
     "@iconify/utils": "2.1.25",
+    "@openapitools/openapi-generator-cli": "^2.15.3",
+    "@tanstack/react-query-devtools": "^5.61.5",
     "@types/mapbox-gl": "^3.1.0",
     "@types/negotiator": "^0.6.3",
     "@types/node": "^20.14.12",
@@ -102,7 +105,6 @@
     "postcss": "8.4.40",
     "postcss-styled-syntax": "0.6.4",
     "prettier": "3.3.3",
-    "prisma": "5.17.0",
     "stylelint": "16.7.0",
     "stylelint-use-logical-spec": "5.0.1",
     "stylis": "4.3.2",
@@ -118,8 +120,5 @@
   },
   "overrides": {
     "rimraf": "^5.0.7"
-  },
-  "prisma": {
-    "schema": "./src/prisma/schema.prisma"
   }
 }
