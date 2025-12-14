@@ -1,0 +1,3002 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "LifeSync API",
+    "version": "1.0.0",
+    "description": "Personal development and productivity management API with tasks, goals, habits, mood tracking, journaling, and pomodoro timer features.",
+    "contact": {
+      "name": "LifeSync Team",
+      "email": "support@lifesync.app"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:4000/api",
+      "description": "Development server"
+    },
+    {
+      "url": "https://api.lifesync.app/api",
+      "description": "Production server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Authentication",
+      "description": "User authentication and account management"
+    },
+    {
+      "name": "User",
+      "description": "User profile and dashboard operations"
+    },
+    {
+      "name": "Categories",
+      "description": "Task category management"
+    },
+    {
+      "name": "Tasks",
+      "description": "Task and subtask management"
+    },
+    {
+      "name": "Goals",
+      "description": "Goal tracking with milestones and progress prediction"
+    },
+    {
+      "name": "Habits",
+      "description": "Habit tracking with streak calculation"
+    },
+    {
+      "name": "Mood",
+      "description": "48-emotion mood tracking with 4D analysis"
+    },
+    {
+      "name": "Journal",
+      "description": "Personal journaling with mood snapshots"
+    },
+    {
+      "name": "Pomodoro",
+      "description": "Pomodoro timer sessions and statistics"
+    },
+    {
+      "name": "Notifications",
+      "description": "Firebase Cloud Messaging and Telegram notifications"
+    },
+    {
+      "name": "Health",
+      "description": "API health check"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Health check endpoint",
+        "description": "Check API, database, and Redis connectivity status",
+        "responses": {
+          "200": {
+            "description": "Health check response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Register new user",
+        "description": "Create a new user account with email and password",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User registered successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "409": {
+            "$ref": "#/components/responses/ConflictError"
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Login user",
+        "description": "Authenticate user with email and password",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/auth/change-password": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Change password",
+        "description": "Change current user password",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password changed successfully"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/auth/forgot-password": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Request password reset",
+        "description": "Send password reset token via notification",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset token sent"
+          }
+        }
+      }
+    },
+    "/auth/reset-password": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Reset password",
+        "description": "Reset password using token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset successfully"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        }
+      }
+    },
+    "/user/profile": {
+      "get": {
+        "tags": ["User"],
+        "summary": "Get user profile",
+        "description": "Retrieve current user profile information",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "User profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfile"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      },
+      "patch": {
+        "tags": ["User"],
+        "summary": "Update user profile",
+        "description": "Update current user profile information",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfile"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/user/dashboard": {
+      "get": {
+        "tags": ["User"],
+        "summary": "Get dashboard summary",
+        "description": "Retrieve comprehensive dashboard with tasks, goals, habits, and recent activities",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "Dashboard data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/categories": {
+      "get": {
+        "tags": ["Categories"],
+        "summary": "List all categories",
+        "description": "Get all task categories for the authenticated user",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "List of categories",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "categories": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Category"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Categories"],
+        "summary": "Create category",
+        "description": "Create a new task category",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCategoryInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Category created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Category"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/categories/{id}": {
+      "get": {
+        "tags": ["Categories"],
+        "summary": "Get category by ID",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Category details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Category"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Categories"],
+        "summary": "Update category",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCategoryInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Category updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Category"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Categories"],
+        "summary": "Delete category",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Category deleted"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
+        }
+      }
+    },
+    "/tasks": {
+      "get": {
+        "tags": ["Tasks"],
+        "summary": "List tasks",
+        "description": "Get filtered list of tasks with pagination",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["PENDING", "IN_PROGRESS", "COMPLETED", "CANCELLED"]
+            }
+          },
+          {
+            "name": "priority",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["URGENT", "MEDIUM", "NON_URGENT"]
+            }
+          },
+          {
+            "name": "categoryId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dueDateFrom",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "dueDateTo",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of tasks",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "tasks": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Task"
+                      }
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "limit": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Tasks"],
+        "summary": "Create task",
+        "description": "Create a new task with optional subtasks",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTaskInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Task created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Task"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tasks/{id}": {
+      "get": {
+        "tags": ["Tasks"],
+        "summary": "Get task by ID",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Task details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Task"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Tasks"],
+        "summary": "Update task",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTaskInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Task updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Task"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Tasks"],
+        "summary": "Delete task",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Task deleted"
+          }
+        }
+      }
+    },
+    "/tasks/{id}/complete": {
+      "post": {
+        "tags": ["Tasks"],
+        "summary": "Complete task",
+        "description": "Mark task as completed and update progress",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Task completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Task"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tasks/{id}/subtasks": {
+      "post": {
+        "tags": ["Tasks"],
+        "summary": "Add subtask",
+        "description": "Add a subtask to an existing task",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title"],
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 200
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 2000
+                  },
+                  "priority": {
+                    "type": "string",
+                    "enum": ["URGENT", "MEDIUM", "NON_URGENT"],
+                    "default": "MEDIUM"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Subtask created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Task"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/goals": {
+      "get": {
+        "tags": ["Goals"],
+        "summary": "List goals",
+        "description": "Get all goals with optional filters",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["SHORT_TERM", "LONG_TERM", "YEARLY"]
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["NOT_STARTED", "IN_PROGRESS", "COMPLETED", "CANCELLED"]
+            }
+          },
+          {
+            "name": "priority",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of goals",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "goals": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Goal"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Goals"],
+        "summary": "Create goal",
+        "description": "Create a new goal with tracking metrics",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGoalInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Goal created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Goal"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/goals/{id}": {
+      "get": {
+        "tags": ["Goals"],
+        "summary": "Get goal by ID",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Goal details with progress",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoalWithProgress"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Goals"],
+        "summary": "Update goal",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateGoalInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Goal updated"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Goals"],
+        "summary": "Delete goal",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Goal deleted"
+          }
+        }
+      }
+    },
+    "/goals/{id}/progress": {
+      "patch": {
+        "tags": ["Goals"],
+        "summary": "Update goal progress",
+        "description": "Update current value and recalculate progress",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["currentValue"],
+                "properties": {
+                  "currentValue": {
+                    "type": "number",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Progress updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoalWithProgress"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/goals/{id}/prediction": {
+      "get": {
+        "tags": ["Goals"],
+        "summary": "Get goal completion prediction",
+        "description": "Predict when goal will be completed based on current progress rate",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Prediction data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoalPrediction"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/goals/{id}/milestones": {
+      "get": {
+        "tags": ["Goals"],
+        "summary": "List goal milestones",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of milestones",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "milestones": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Milestone"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Goals"],
+        "summary": "Create milestone",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMilestoneInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Milestone created"
+          }
+        }
+      }
+    },
+    "/goals/{id}/milestones/{milestoneId}": {
+      "patch": {
+        "tags": ["Goals"],
+        "summary": "Update milestone",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "milestoneId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMilestoneInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Milestone updated"
+          }
+        }
+      }
+    },
+    "/habits": {
+      "get": {
+        "tags": ["Habits"],
+        "summary": "List habits",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "List of habits",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "habits": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Habit"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Habits"],
+        "summary": "Create habit",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateHabitInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Habit created"
+          }
+        }
+      }
+    },
+    "/habits/{id}": {
+      "get": {
+        "tags": ["Habits"],
+        "summary": "Get habit by ID",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Habit details"
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Habits"],
+        "summary": "Update habit",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateHabitInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Habit updated"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Habits"],
+        "summary": "Delete habit",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Habit deleted"
+          }
+        }
+      }
+    },
+    "/habits/{id}/complete": {
+      "post": {
+        "tags": ["Habits"],
+        "summary": "Complete habit",
+        "description": "Mark habit as completed for today",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteHabitInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Habit completed"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Habits"],
+        "summary": "Uncomplete habit",
+        "description": "Remove completion for a specific date",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["date"],
+                "properties": {
+                  "date": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Completion removed"
+          }
+        }
+      }
+    },
+    "/habits/{id}/streak": {
+      "get": {
+        "tags": ["Habits"],
+        "summary": "Get habit streak",
+        "description": "Calculate current and longest streaks",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Streak data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "currentStreak": {
+                      "type": "integer"
+                    },
+                    "longestStreak": {
+                      "type": "integer"
+                    },
+                    "totalCompletions": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mood": {
+      "get": {
+        "tags": ["Mood"],
+        "summary": "List mood entries",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "dateFrom",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "dateTo",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "maximum": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of mood entries"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Mood"],
+        "summary": "Create mood entry",
+        "description": "Track mood with up to 10 emotions from 48-emotion system",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMoodInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Mood entry created"
+          }
+        }
+      }
+    },
+    "/mood/{id}": {
+      "get": {
+        "tags": ["Mood"],
+        "summary": "Get mood entry by ID",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mood entry details"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Mood"],
+        "summary": "Delete mood entry",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mood entry deleted"
+          }
+        }
+      }
+    },
+    "/mood/analytics": {
+      "get": {
+        "tags": ["Mood"],
+        "summary": "Get mood analytics",
+        "description": "Analyze mood patterns over time with energy and valence dimensions",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "dateFrom",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "dateTo",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mood analytics data"
+          }
+        }
+      }
+    },
+    "/mood/visualization": {
+      "get": {
+        "tags": ["Mood"],
+        "summary": "Get mood visualization data",
+        "description": "Get data formatted for 4D mood visualization (Energy × Valence)",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 30
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Visualization data"
+          }
+        }
+      }
+    },
+    "/journal": {
+      "get": {
+        "tags": ["Journal"],
+        "summary": "List journal entries",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "dateFrom",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "dateTo",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "tag",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of journal entries"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Journal"],
+        "summary": "Create journal entry",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateJournalInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Journal entry created"
+          }
+        }
+      }
+    },
+    "/journal/{id}": {
+      "get": {
+        "tags": ["Journal"],
+        "summary": "Get journal entry by ID",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Journal entry details"
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Journal"],
+        "summary": "Update journal entry",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateJournalInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Journal entry updated"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Journal"],
+        "summary": "Delete journal entry",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Journal entry deleted"
+          }
+        }
+      }
+    },
+    "/pomodoro": {
+      "get": {
+        "tags": ["Pomodoro"],
+        "summary": "List pomodoro sessions",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "dateFrom",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "dateTo",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "taskId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["WORK", "BREAK", "COMPLETED", "CANCELLED"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of pomodoro sessions"
+          }
+        }
+      }
+    },
+    "/pomodoro/start": {
+      "post": {
+        "tags": ["Pomodoro"],
+        "summary": "Start pomodoro session",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartPomodoroInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Pomodoro session started"
+          }
+        }
+      }
+    },
+    "/pomodoro/{id}/complete": {
+      "patch": {
+        "tags": ["Pomodoro"],
+        "summary": "Complete pomodoro session",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session completed"
+          }
+        }
+      }
+    },
+    "/pomodoro/stats": {
+      "get": {
+        "tags": ["Pomodoro"],
+        "summary": "Get pomodoro statistics",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["today", "week", "month"],
+              "default": "today"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pomodoro statistics"
+          }
+        }
+      }
+    },
+    "/fcm/register": {
+      "post": {
+        "tags": ["Notifications"],
+        "summary": "Register FCM token",
+        "description": "Register Firebase Cloud Messaging device token",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["token"],
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "description": "FCM device token"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token registered"
+          }
+        }
+      }
+    },
+    "/telegram/auth": {
+      "post": {
+        "tags": ["Notifications"],
+        "summary": "Authenticate Telegram",
+        "description": "Link Telegram account for notifications",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["token"],
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "description": "Telegram authentication token"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Telegram linked"
+          }
+        }
+      }
+    },
+    "/telegram/disconnect": {
+      "post": {
+        "tags": ["Notifications"],
+        "summary": "Disconnect Telegram",
+        "description": "Unlink Telegram account",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "Telegram disconnected"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Enter JWT token obtained from login/register"
+      }
+    },
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["healthy", "unhealthy"]
+          },
+          "checks": {
+            "type": "object",
+            "properties": {
+              "api": {
+                "type": "string"
+              },
+              "database": {
+                "type": "string"
+              },
+              "redis": {
+                "type": "string"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          },
+          "version": {
+            "type": "string"
+          },
+          "environment": {
+            "type": "string"
+          }
+        }
+      },
+      "RegisterInput": {
+        "type": "object",
+        "required": ["email", "password", "firstName"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "pattern": "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$"
+          },
+          "firstName": {
+            "type": "string",
+            "minLength": 2
+          },
+          "lastName": {
+            "type": "string",
+            "minLength": 2
+          }
+        }
+      },
+      "LoginInput": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string"
+          }
+        }
+      },
+      "ChangePasswordInput": {
+        "type": "object",
+        "required": ["currentPassword", "newPassword"],
+        "properties": {
+          "currentPassword": {
+            "type": "string"
+          },
+          "newPassword": {
+            "type": "string",
+            "minLength": 8
+          }
+        }
+      },
+      "ForgotPasswordInput": {
+        "type": "object",
+        "required": ["email"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          }
+        }
+      },
+      "ResetPasswordInput": {
+        "type": "object",
+        "required": ["token", "password"],
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8
+          }
+        }
+      },
+      "UpdateProfileInput": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 50
+          },
+          "middleName": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 50
+          },
+          "lastName": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 50
+          },
+          "age": {
+            "type": "integer",
+            "minimum": 13,
+            "maximum": 120
+          },
+          "gender": {
+            "type": "string",
+            "enum": ["MALE", "FEMALE", "OTHER", "PREFER_NOT_TO_SAY"]
+          },
+          "country": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 100
+          },
+          "profilePicture": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      },
+      "AuthResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserProfile"
+          }
+        }
+      },
+      "UserProfile": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "middleName": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastName": {
+            "type": "string",
+            "nullable": true
+          },
+          "age": {
+            "type": "integer",
+            "nullable": true
+          },
+          "gender": {
+            "type": "string",
+            "nullable": true
+          },
+          "country": {
+            "type": "string",
+            "nullable": true
+          },
+          "profilePicture": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "DashboardResponse": {
+        "type": "object",
+        "properties": {
+          "tasks": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "integer"
+              },
+              "completed": {
+                "type": "integer"
+              },
+              "pending": {
+                "type": "integer"
+              },
+              "inProgress": {
+                "type": "integer"
+              },
+              "urgent": {
+                "type": "integer"
+              }
+            }
+          },
+          "goals": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "integer"
+              },
+              "inProgress": {
+                "type": "integer"
+              },
+              "completed": {
+                "type": "integer"
+              }
+            }
+          },
+          "habits": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "integer"
+              },
+              "completedToday": {
+                "type": "integer"
+              },
+              "avgStreak": {
+                "type": "number"
+              }
+            }
+          },
+          "recentActivities": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "Category": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string",
+            "nullable": true
+          },
+          "color": {
+            "type": "string",
+            "nullable": true
+          },
+          "timeEstimate": {
+            "type": "integer",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CreateCategoryInput": {
+        "type": "object",
+        "required": ["title"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 100
+          },
+          "icon": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "color": {
+            "type": "string",
+            "pattern": "^#[0-9A-F]{6}$"
+          },
+          "timeEstimate": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      },
+      "UpdateCategoryInput": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 100
+          },
+          "icon": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "color": {
+            "type": "string",
+            "pattern": "^#[0-9A-F]{6}$"
+          },
+          "timeEstimate": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      },
+      "Task": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "categoryId": {
+            "type": "string",
+            "nullable": true
+          },
+          "parentTaskId": {
+            "type": "string",
+            "nullable": true
+          },
+          "priority": {
+            "type": "string",
+            "enum": ["URGENT", "MEDIUM", "NON_URGENT"]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["PENDING", "IN_PROGRESS", "COMPLETED", "CANCELLED"]
+          },
+          "timeEstimate": {
+            "type": "integer",
+            "nullable": true
+          },
+          "difficulty": {
+            "type": "string",
+            "enum": ["EASY", "MEDIUM", "HARD"],
+            "nullable": true
+          },
+          "importance": {
+            "type": "string",
+            "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"],
+            "nullable": true
+          },
+          "progress": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "dueDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "subtasks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Task"
+            }
+          }
+        }
+      },
+      "CreateTaskInput": {
+        "type": "object",
+        "required": ["title"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 200
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "categoryId": {
+            "type": "string"
+          },
+          "parentTaskId": {
+            "type": "string"
+          },
+          "priority": {
+            "type": "string",
+            "enum": ["URGENT", "MEDIUM", "NON_URGENT"],
+            "default": "MEDIUM"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["PENDING", "IN_PROGRESS", "COMPLETED", "CANCELLED"],
+            "default": "PENDING"
+          },
+          "timeEstimate": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "difficulty": {
+            "type": "string",
+            "enum": ["EASY", "MEDIUM", "HARD"]
+          },
+          "importance": {
+            "type": "string",
+            "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+          },
+          "progress": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "default": 0
+          },
+          "dueDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "subtasks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["title"],
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "minLength": 3,
+                  "maxLength": 200
+                },
+                "description": {
+                  "type": "string",
+                  "maxLength": 2000
+                },
+                "priority": {
+                  "type": "string",
+                  "enum": ["URGENT", "MEDIUM", "NON_URGENT"],
+                  "default": "MEDIUM"
+                }
+              }
+            }
+          }
+        }
+      },
+      "UpdateTaskInput": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 200
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "categoryId": {
+            "type": "string",
+            "nullable": true
+          },
+          "priority": {
+            "type": "string",
+            "enum": ["URGENT", "MEDIUM", "NON_URGENT"]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["PENDING", "IN_PROGRESS", "COMPLETED", "CANCELLED"]
+          },
+          "timeEstimate": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "difficulty": {
+            "type": "string",
+            "enum": ["EASY", "MEDIUM", "HARD"]
+          },
+          "importance": {
+            "type": "string",
+            "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+          },
+          "progress": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "dueDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "Goal": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "type": {
+            "type": "string",
+            "enum": ["SHORT_TERM", "LONG_TERM", "YEARLY"]
+          },
+          "targetValue": {
+            "type": "number",
+            "nullable": true
+          },
+          "currentValue": {
+            "type": "number"
+          },
+          "unit": {
+            "type": "string",
+            "nullable": true
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": ["NOT_STARTED", "IN_PROGRESS", "COMPLETED", "CANCELLED"]
+          },
+          "priority": {
+            "type": "string",
+            "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "GoalWithProgress": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Goal"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "actualProgress": {
+                "type": "number",
+                "description": "Actual progress percentage (currentValue / targetValue)"
+              },
+              "expectedProgress": {
+                "type": "number",
+                "description": "Expected progress based on time elapsed"
+              },
+              "isOnTrack": {
+                "type": "boolean",
+                "description": "Whether goal is on track to meet deadline"
+              }
+            }
+          }
+        ]
+      },
+      "CreateGoalInput": {
+        "type": "object",
+        "required": ["title", "type", "startDate"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 200
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "type": {
+            "type": "string",
+            "enum": ["SHORT_TERM", "LONG_TERM", "YEARLY"]
+          },
+          "targetValue": {
+            "type": "number",
+            "minimum": 0
+          },
+          "currentValue": {
+            "type": "number",
+            "minimum": 0,
+            "default": 0
+          },
+          "unit": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "priority": {
+            "type": "string",
+            "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"],
+            "default": "MEDIUM"
+          }
+        }
+      },
+      "UpdateGoalInput": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 200
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "type": {
+            "type": "string",
+            "enum": ["SHORT_TERM", "LONG_TERM", "YEARLY"]
+          },
+          "targetValue": {
+            "type": "number",
+            "minimum": 0
+          },
+          "currentValue": {
+            "type": "number",
+            "minimum": 0
+          },
+          "unit": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": ["NOT_STARTED", "IN_PROGRESS", "COMPLETED", "CANCELLED"]
+          },
+          "priority": {
+            "type": "string",
+            "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+          }
+        }
+      },
+      "GoalPrediction": {
+        "type": "object",
+        "properties": {
+          "estimatedCompletionDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "progressRate": {
+            "type": "number",
+            "description": "Progress rate per day"
+          },
+          "daysRemaining": {
+            "type": "integer"
+          },
+          "willMeetDeadline": {
+            "type": "boolean"
+          },
+          "recommendedDailyProgress": {
+            "type": "number",
+            "description": "Recommended progress per day to meet deadline"
+          }
+        }
+      },
+      "Milestone": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "targetValue": {
+            "type": "number",
+            "nullable": true
+          },
+          "order": {
+            "type": "integer"
+          },
+          "isCompleted": {
+            "type": "boolean"
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "CreateMilestoneInput": {
+        "type": "object",
+        "required": ["title", "order"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 200
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "targetValue": {
+            "type": "number",
+            "minimum": 0
+          },
+          "order": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "UpdateMilestoneInput": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 200
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "targetValue": {
+            "type": "number",
+            "minimum": 0
+          },
+          "order": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "isCompleted": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Habit": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "icon": {
+            "type": "string",
+            "nullable": true
+          },
+          "color": {
+            "type": "string",
+            "nullable": true
+          },
+          "frequency": {
+            "type": "string",
+            "enum": ["DAILY", "WEEKLY", "CUSTOM"]
+          },
+          "targetDays": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 6
+            }
+          },
+          "currentStreak": {
+            "type": "integer"
+          },
+          "longestStreak": {
+            "type": "integer"
+          },
+          "totalCompletions": {
+            "type": "integer"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CreateHabitInput": {
+        "type": "object",
+        "required": ["title"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 100
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "icon": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "color": {
+            "type": "string",
+            "pattern": "^#[0-9A-F]{6}$"
+          },
+          "frequency": {
+            "type": "string",
+            "enum": ["DAILY", "WEEKLY", "CUSTOM"],
+            "default": "DAILY"
+          },
+          "targetDays": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 6
+            }
+          }
+        }
+      },
+      "UpdateHabitInput": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 100
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "icon": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "color": {
+            "type": "string",
+            "pattern": "^#[0-9A-F]{6}$"
+          },
+          "frequency": {
+            "type": "string",
+            "enum": ["DAILY", "WEEKLY", "CUSTOM"]
+          },
+          "targetDays": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 6
+            }
+          }
+        }
+      },
+      "CompleteHabitInput": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completed": {
+            "type": "boolean",
+            "default": true
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 500
+          }
+        }
+      },
+      "CreateMoodInput": {
+        "type": "object",
+        "required": ["selectedMoodIds", "emotions", "time"],
+        "properties": {
+          "selectedMoodIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 48
+            },
+            "minItems": 1,
+            "maxItems": 10
+          },
+          "emotions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id"],
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 48
+                },
+                "intensity": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 5,
+                  "default": 3
+                }
+              }
+            }
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 50
+            },
+            "maxItems": 10
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "time": {
+            "type": "string",
+            "pattern": "^([01]\\d|2[0-3]):([0-5]\\d)$",
+            "description": "Time in HH:mm format"
+          }
+        }
+      },
+      "CreateJournalInput": {
+        "type": "object",
+        "required": ["content"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "content": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 10000
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 50
+            },
+            "maxItems": 20
+          },
+          "moodSnapshot": {
+            "type": "object",
+            "properties": {
+              "emotionIds": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 48
+                }
+              },
+              "energy": {
+                "type": "number",
+                "minimum": -1,
+                "maximum": 1
+              },
+              "valence": {
+                "type": "number",
+                "minimum": -1,
+                "maximum": 1
+              }
+            }
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "UpdateJournalInput": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "content": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 10000
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 50
+            },
+            "maxItems": 20
+          },
+          "moodSnapshot": {
+            "type": "object",
+            "properties": {
+              "emotionIds": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 48
+                }
+              },
+              "energy": {
+                "type": "number",
+                "minimum": -1,
+                "maximum": 1
+              },
+              "valence": {
+                "type": "number",
+                "minimum": -1,
+                "maximum": 1
+              }
+            }
+          }
+        }
+      },
+      "StartPomodoroInput": {
+        "type": "object",
+        "properties": {
+          "taskId": {
+            "type": "string"
+          },
+          "workDuration": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 120,
+            "default": 25,
+            "description": "Work duration in minutes"
+          },
+          "breakDuration": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 30,
+            "default": 5,
+            "description": "Break duration in minutes"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "details": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "responses": {
+      "ValidationError": {
+        "description": "Validation error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "UnauthorizedError": {
+        "description": "Unauthorized - Invalid or missing authentication",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "NotFoundError": {
+        "description": "Resource not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "ConflictError": {
+        "description": "Conflict - Resource already exists",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    }
+  }
+}
