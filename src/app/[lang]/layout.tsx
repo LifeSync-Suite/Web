@@ -23,9 +23,9 @@ import '@/app/globals.css'
 import '@assets/iconify-icons/generated-icons.css'
 
 export const metadata = {
-  title: 'Vuexy - MUI Next.js Admin Dashboard Template',
+  title: 'LifeSync — Your Personal OS',
   description:
-    'Vuexy - MUI Next.js Admin Dashboard Template - is the most developer friendly & highly customizable Admin Dashboard Template based on MUI v5.'
+    'LifeSync is a deeply integrated personal life-management platform. Manage tasks, goals, habits, mood, focus sessions, and your calendar — all in one place.'
 }
 
 const RootLayout = ({ children, params }: ChildrenType & { params: { lang: Locale } }) => {
