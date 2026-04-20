@@ -6,7 +6,7 @@ const typography = (fontFamily: string): Theme['typography'] =>
     fontFamily:
       typeof fontFamily === 'undefined' || fontFamily === ''
         ? [
-            '"Public Sans"',
+            '"Plus Jakarta Sans"',
             'sans-serif',
             '-apple-system',
             'BlinkMacSystemFont',
