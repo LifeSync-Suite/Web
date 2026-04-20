@@ -5,37 +5,36 @@ export type PrimaryColorConfig = {
   dark?: string
 }
 
-// Primary color config object
 const primaryColorConfig: PrimaryColorConfig[] = [
   {
     name: 'primary-1',
+    light: '#DBA07A',
+    main: '#C97C4A',
+    dark: '#A8612E'
+  },
+  {
+    name: 'primary-2',
+    light: '#8DAF93',
+    main: '#6B8F71',
+    dark: '#4D6F53'
+  },
+  {
+    name: 'primary-3',
+    light: '#DFC49A',
+    main: '#C9A96E',
+    dark: '#A07A3E'
+  },
+  {
+    name: 'primary-4',
     light: '#8F85F3',
     main: '#7367F0',
     dark: '#675DD8'
   },
   {
-    name: 'primary-2',
-    light: '#4EB0B1',
-    main: '#0D9394',
-    dark: '#096B6C'
-  },
-  {
-    name: 'primary-3',
-    light: '#FFC25A',
-    main: '#FFAB1D',
-    dark: '#BA7D15'
-  },
-  {
-    name: 'primary-4',
-    light: '#F0718D',
-    main: '#EB3D63',
-    dark: '#AC2D48'
-  },
-  {
     name: 'primary-5',
-    light: '#5CAFF1',
-    main: '#2092EC',
-    dark: '#176BAC'
+    light: '#33C8DA',
+    main: '#00BAD1',
+    dark: '#00A7BC'
   }
 ]
 

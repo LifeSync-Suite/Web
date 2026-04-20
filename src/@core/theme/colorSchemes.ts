@@ -9,9 +9,9 @@ const colorSchemes = (skin: Skin): Theme['colorSchemes'] => {
     light: {
       palette: {
         primary: {
-          main: '#7367F0',
-          light: '#8F85F3',
-          dark: '#675DD8',
+          main: '#C97C4A',
+          light: '#DBA07A',
+          dark: '#A8612E',
           lighterOpacity: 'rgb(var(--mui-palette-primary-mainChannel) / 0.08)',
           lightOpacity: 'rgb(var(--mui-palette-primary-mainChannel) / 0.16)',
           mainOpacity: 'rgb(var(--mui-palette-primary-mainChannel) / 0.24)',
@@ -83,7 +83,7 @@ const colorSchemes = (skin: Skin): Theme['colorSchemes'] => {
         divider: `rgb(var(--mui-mainColorChannels-light) / 0.12)`,
         dividerChannel: 'var(--mui-mainColorChannels-light)',
         background: {
-          default: skin === 'bordered' ? '#FFFFFF' : '#F8F7FA',
+          default: skin === 'bordered' ? '#FFFFFF' : '#F8F4EF',
           paper: '#FFFFFF',
           paperChannel: '255 255 255'
         },
@@ -148,7 +148,7 @@ const colorSchemes = (skin: Skin): Theme['colorSchemes'] => {
           border: 'var(--mui-palette-divider)'
         },
         customColors: {
-          bodyBg: '#F8F7FA',
+          bodyBg: '#F8F4EF',
           chatBg: '#F3F2F5',
           greyLightBg: '#FAFAFA',
           inputBorder: `rgb(var(--mui-mainColorChannels-light) / 0.22)`,
@@ -161,9 +161,9 @@ const colorSchemes = (skin: Skin): Theme['colorSchemes'] => {
     dark: {
       palette: {
         primary: {
-          main: '#7367F0',
-          light: '#8F85F3',
-          dark: '#675DD8',
+          main: '#C97C4A',
+          light: '#DBA07A',
+          dark: '#A8612E',
           lighterOpacity: 'rgb(var(--mui-palette-primary-mainChannel) / 0.08)',
           lightOpacity: 'rgb(var(--mui-palette-primary-mainChannel) / 0.16)',
           mainOpacity: 'rgb(var(--mui-palette-primary-mainChannel) / 0.24)',
