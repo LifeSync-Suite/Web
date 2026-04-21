@@ -4,18 +4,18 @@ services:
   # Development service
   lifesync-web-dev:
     container_name: lifesync-web-dev
-    image: node:20-alpine
-    # build:
-    #   context: .
-    #   dockerfile: Dockerfile.dev
+    # image: node:lts-alpine
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      # image: lifesync-web-dev-image
     ports:
       - "4000:3000"
     volumes:
       # Mount source code for hot reload
       - .:/app
-      # Prevent overwriting node_modules
+      # Preserve container's node_modules (don't overwrite with host)
       - /app/node_modules
-      - /app/.next
     environment:
       - NODE_ENV=development
       - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL:-http://localhost:4000/api}
@@ -23,7 +23,8 @@ services:
       - NEXT_PUBLIC_ENV=development
     networks:
       - lifesync-network
-    command: sh -c "cd /app && npm install && npm run dev"
+    working_dir: /app
+    command:  npm run dev
     restart: unless-stopped
 
   # Production service (for testing production build locally)
@@ -48,4 +49,4 @@ services:
 
 networks:
   lifesync-network:
-    driver: bridge
+    # driver: bridge
