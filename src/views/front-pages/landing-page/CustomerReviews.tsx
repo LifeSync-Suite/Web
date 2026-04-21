@@ -1,243 +1,73 @@
-// MUI Imports
-import Typography from '@mui/material/Typography'
-import Card from '@mui/material/Card'
-import CardContent from '@mui/material/CardContent'
-import Chip from '@mui/material/Chip'
-import Rating from '@mui/material/Rating'
-import Divider from '@mui/material/Divider'
+'use client'
 
-// Third-party Imports
-import { useKeenSlider } from 'keen-slider/react'
-import classnames from 'classnames'
+// React Imports
+import { useState, useEffect } from 'react'
 
-// Component Imports
-import CustomIconButton from '@core/components/mui/IconButton'
-import CustomAvatar from '@core/components/mui/Avatar'
-
-// Styled Component Imports
-import AppKeenSlider from '@/libs/styles/AppKeenSlider'
-
-// SVG Imports
-import HubSpot from '@assets/svg/front-pages/landing-page/HubSpot'
-import Pinterest from '@assets/svg/front-pages/landing-page/Pinterest'
-import Dribbble from '@assets/svg/front-pages/landing-page/Dribbble'
-import Airbnb from '@assets/svg/front-pages/landing-page/Airbnb'
-import Coinbase from '@assets/svg/front-pages/landing-page/Coinbase'
-import Netflix from '@assets/svg/front-pages/landing-page/Netflix'
-
-// Styles Imports
-import frontCommonStyles from '@views/front-pages/styles.module.css'
-import styles from './styles.module.css'
-
-// Data
-const data = [
-  {
-    desc: "I've never used a theme as versatile and flexible as Vuexy. It's my go to for building dashboard sites on almost any project.",
-    svg: <Pinterest color='#ee7676' />,
-    rating: 5,
-    name: 'Eugenia Moore',
-    position: 'Founder of Pinterest',
-    avatarSrc: '/images/avatars/1.png'
-  },
-  {
-    desc: 'Materio is awesome, and I particularly enjoy knowing that if I get stuck on something.',
-    svg: <Netflix color='#d34c4d' />,
-    rating: 5,
-    name: 'Tommy haffman',
-    position: 'Founder of Netflix',
-    avatarSrc: '/images/avatars/2.png'
-  },
-  {
-    desc: "This template is superior in so many ways. The code, the design, the regular updates, the support.. It's the whole package. Excellent Work.",
-    svg: <Airbnb color='#FF5A60' />,
-    rating: 4,
-    name: 'Eugenia Moore',
-    position: 'CTO of Airbnb',
-    avatarSrc: '/images/avatars/3.png'
-  },
-  {
-    desc: "All the requirements for developers have been taken into consideration, so I'm able to build any interface I want.",
-    svg: <Coinbase color='#0199ff' />,
-    rating: 5,
-    name: 'Sara Smith',
-    position: 'Founder of Coinbase',
-    avatarSrc: '/images/avatars/4.png'
-  },
-  {
-    desc: "I've never used a theme as versatile and flexible as Vuexy. It's my go to for building dashboard sites on almost any project.",
-    svg: <Dribbble color='#ea4c89' />,
-    rating: 5,
-    name: 'Tommy haffman',
-    position: 'Founder of Dribble',
-    avatarSrc: '/images/avatars/5.png'
-  },
-  {
-    desc: "I've never used a theme as versatile and flexible as Vuexy. It's my go to for building dashboard sites on almost any project.",
-    svg: <Pinterest color='#ee7676' />,
-    rating: 5,
-    name: 'Eugenia Moore',
-    position: 'Founder of Pinterest',
-    avatarSrc: '/images/avatars/6.png',
-    color: '#2882C3'
-  },
-  {
-    desc: 'Materio is awesome, and I particularly enjoy knowing that if I get stuck on something.',
-    svg: <HubSpot color='#FF5C35' />,
-    rating: 5,
-    name: 'Tommy haffman',
-    position: 'Founder of HubSpot',
-    avatarSrc: '/images/avatars/7.png'
-  },
-  {
-    desc: "This template is superior in so many ways. The code, the design, the regular updates, the support.. It's the whole package. Excellent Work.",
-    svg: <Airbnb color='#FF5A60' />,
-    rating: 4,
-    name: 'Eugenia Moore',
-    position: 'CTO of Airbnb',
-    avatarSrc: '/images/avatars/8.png'
-  },
-  {
-    desc: "All the requirements for developers have been taken into consideration, so I'm able to build any interface I want.",
-    svg: <Coinbase color='#0199ff' />,
-    rating: 5,
-    name: 'Sara Smith',
-    position: 'Founder of Coinbase',
-    avatarSrc: '/images/avatars/9.png'
-  },
-  {
-    desc: 'Materio is awesome, and I particularly enjoy knowing that if I get stuck on something.',
-    svg: <Dribbble color='#ea4c89' />,
-    rating: 5,
-    name: 'Tommy haffman',
-    position: 'Founder of Dribbble',
-    avatarSrc: '/images/avatars/10.png'
-  }
+const SLIDES = [
+  [
+    { initials: 'SK', bg: 'rgba(201,124,74,.12)', color: '#C97C4A', name: 'Sara K.', role: 'Freelance designer, early tester', quote: 'I\'ve tried every productivity app out there. LifeSync is the first one that feels like it actually understands me — not just my tasks.' },
+    { initials: 'MR', bg: 'rgba(0,186,209,.12)', color: '#00BAD1', name: 'Marcus R.', role: 'Software engineer, beta user', quote: 'The mood + habit correlation insight blew my mind. I had no idea my energy crashes were tied to skipping my morning run.' },
+    { initials: 'JL', bg: 'rgba(40,199,111,.12)', color: '#28C76F', name: 'Jess L.', role: 'Therapist & coach, early tester', quote: 'The journal is the first place I\'ve felt truly safe writing. Knowing it\'s encrypted makes me more honest with myself.' }
+  ],
+  [
+    { initials: 'AP', bg: 'rgba(115,103,240,.12)', color: '#7367F0', name: 'Alex P.', role: 'Entrepreneur, early tester', quote: 'I finally understand why some weeks feel great and others feel off. The analytics are genuinely eye-opening.' },
+    { initials: 'NW', bg: 'rgba(255,159,67,.12)', color: '#FF9F43', name: 'Nina W.', role: 'Product manager, beta user', quote: 'Setting up goals linked to daily habits was a game-changer. I can see exactly how my small actions compound.' },
+    { initials: 'DT', bg: 'rgba(201,124,74,.12)', color: '#C97C4A', name: 'David T.', role: 'Writer & researcher', quote: 'The focus timer with ambient sounds is so good I actually look forward to deep work sessions now. Wild.' }
+  ]
 ]
 
 const CustomerReviews = () => {
-  // Hooks
-  const [sliderRef, instanceRef] = useKeenSlider<HTMLDivElement>(
-    {
-      loop: true,
-      slides: {
-        perView: 3,
-        origin: 'auto'
-      },
-      breakpoints: {
-        '(max-width: 1200px)': {
-          slides: {
-            perView: 2,
-            spacing: 10,
-            origin: 'auto'
-          }
-        },
-        '(max-width: 900px)': {
-          slides: {
-            perView: 2,
-            spacing: 10
-          }
-        },
-        '(max-width: 600px)': {
-          slides: {
-            perView: 1,
-            spacing: 10,
-            origin: 'center'
-          }
-        }
-      }
-    },
-    [
-      slider => {
-        let timeout: ReturnType<typeof setTimeout>
-        const mouseOver = false
+  const [slide, setSlide] = useState(0)
 
-        function clearNextTimeout() {
-          clearTimeout(timeout)
-        }
-
-        function nextTimeout() {
-          clearTimeout(timeout)
-          if (mouseOver) return
-          timeout = setTimeout(() => {
-            slider.next()
-          }, 2000)
-        }
-
-        slider.on('created', nextTimeout)
-        slider.on('dragStarted', clearNextTimeout)
-        slider.on('animationEnded', nextTimeout)
-        slider.on('updated', nextTimeout)
-      }
-    ]
-  )
+  useEffect(() => {
+    const timer = setInterval(() => setSlide(s => (s + 1) % 2), 5000)
+    return () => clearInterval(timer)
+  }, [])
 
   return (
-    <section className={classnames('flex flex-col gap-8 plb-[100px] bg-backgroundDefault', styles.sectionStartRadius)}>
-      <div
-        className={classnames('flex max-md:flex-col max-sm:flex-wrap is-full gap-6', frontCommonStyles.layoutSpacing)}
-      >
-        <div className='flex flex-col gap-1 bs-full justify-center items-center lg:items-start is-full md:is-[30%] mlb-auto sm:pbs-2'>
-          <Chip label='Real Customers Reviews' variant='tonal' color='primary' size='small' className='mbe-3' />
-          <div className='flex flex-col gap-y-1 flex-wrap max-lg:text-center '>
-            <Typography color='text.primary' variant='h4'>
-              <span className='relative z-[1] font-extrabold'>
-                What people say
-                <img
-                  src='/images/front-pages/landing-page/bg-shape.png'
-                  alt='bg-shape'
-                  className='absolute block-end-0 z-[1] bs-[40%] is-[132%] inline-start-[-8%] block-start-[17px]'
-                />
-              </span>
-            </Typography>
-            <Typography>See what our customers have to say about their experience.</Typography>
+    <section style={{ padding: '96px 32px', background: '#F8F4EF' }}>
+      <div style={{ maxWidth: 1160, margin: '0 auto' }}>
+        <div style={{ textAlign: 'center', marginBottom: 56 }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(201,124,74,.08)', color: '#A8612E', borderRadius: 9999, padding: '4px 12px', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.4px', textTransform: 'uppercase', marginBottom: 16 }}>
+            <i className='tabler-heart' /> Early users
           </div>
-          <div className='flex gap-x-4 mbs-11'>
-            <CustomIconButton color='primary' variant='tonal' onClick={() => instanceRef.current?.prev()}>
-              <i className='tabler-chevron-left' />
-            </CustomIconButton>
-            <CustomIconButton color='primary' variant='tonal' onClick={() => instanceRef.current?.next()}>
-              <i className='tabler-chevron-right' />
-            </CustomIconButton>
-          </div>
+          <h2 style={{ fontSize: 'clamp(1.75rem, 3.5vw, 2.5rem)', fontWeight: 800, color: 'rgba(47,43,61,.92)', lineHeight: 1.2, letterSpacing: '-0.02em' }}>
+            People are{' '}
+            <em style={{ fontStyle: 'normal', fontFamily: 'Georgia, serif', color: '#C97C4A', fontWeight: 700 }}>already loving it</em>
+          </h2>
         </div>
-        <div className='is-full md:is-[70%]'>
-          <AppKeenSlider>
-            <div ref={sliderRef} className='keen-slider mbe-6'>
-              {data.map((item, index) => (
-                <div key={index} className='keen-slider__slide flex p-4 sm:p-3'>
-                  <Card elevation={8} className='flex items-start'>
-                    <CardContent className='p-8 items-center mlb-auto'>
-                      <div className='flex flex-col gap-4 items-start'>
-                        {item.svg}
-                        <Typography>{item.desc}</Typography>
-                        <Rating value={item.rating} readOnly />
-                        <div className='flex items-center gap-x-3'>
-                          <CustomAvatar size={32} src={item.avatarSrc} alt={item.name} />
-                          <div className='flex flex-col items-start'>
-                            <Typography color='text.primary' className='font-medium'>
-                              {item.name}
-                            </Typography>
-                            <Typography variant='body2' color='text.disabled'>
-                              {item.position}
-                            </Typography>
-                          </div>
-                        </div>
+
+        <div style={{ overflow: 'hidden' }}>
+          <div style={{ display: 'flex', transition: 'transform .55s cubic-bezier(.22,1,.36,1)', transform: `translateX(-${slide * 100}%)` }}>
+            {SLIDES.map((group, si) => (
+              <div key={si} style={{ minWidth: '100%', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 20, padding: '4px' }}>
+                {group.map(({ initials, bg, color, name, role, quote }) => (
+                  <div key={name} style={{ background: '#fff', borderRadius: 16, padding: '26px 24px', boxShadow: '0 2px 16px rgba(47,43,61,.07)' }}>
+                    <div style={{ color: '#FF9F43', fontSize: '0.75rem', marginBottom: 12, letterSpacing: 1 }}>★★★★★</div>
+                    <p style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '0.9375rem', color: 'rgba(47,43,61,.78)', lineHeight: 1.7, marginBottom: 18 }}>&ldquo;{quote}&rdquo;</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{ width: 36, height: 36, borderRadius: '50%', background: bg, color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 700, flexShrink: 0 }}>{initials}</div>
+                      <div>
+                        <div style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'rgba(47,43,61,.85)' }}>{name}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'rgba(47,43,61,.45)' }}>{role}</div>
                       </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              ))}
-            </div>
-          </AppKeenSlider>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
-      <Divider />
-      <div className='flex flex-wrap items-center justify-center gap-x-16 gap-y-6 mli-3'>
-        <Airbnb color='var(--mui-palette-text-secondary)' />
-        <Netflix color='var(--mui-palette-text-secondary)' />
-        <Dribbble color='var(--mui-palette-text-secondary)' />
-        <Coinbase color='var(--mui-palette-text-secondary)' />
-        <Pinterest color='var(--mui-palette-text-secondary)' />
+
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 24 }}>
+          {[0, 1].map(i => (
+            <button
+              key={i}
+              onClick={() => setSlide(i)}
+              style={{ border: 'none', cursor: 'pointer', borderRadius: 9999, background: slide === i ? '#C97C4A' : 'rgba(47,43,61,.2)', width: slide === i ? 22 : 7, height: 7, padding: 0, transition: 'all .3s' }}
+            />
+          ))}
+        </div>
       </div>
     </section>
   )
