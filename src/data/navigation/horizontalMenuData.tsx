@@ -11,7 +11,7 @@ const horizontalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>
   {
     label: 'Tasks',
     icon: 'tabler-checklist',
-    href: '/apps/kanban'
+    href: '/apps/tasks'
   },
   {
     label: 'Goals',
