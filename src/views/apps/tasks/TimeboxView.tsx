@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useBreakpoint, isMobile, isTablet } from '@/hooks/useBreakpoint'
 import type { Task, DayTemplate, TemplateBlock, TimeboxEntry } from './taskData'
 import {
   ALL_TASKS, PRIORITY_COLOR, BLOCK_COLORS, DEFAULT_TEMPLATES,
@@ -70,7 +71,7 @@ function TemplateEditorModal({ template, onSave, onClose }: {
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--mui-palette-text-disabled)', fontSize: 20, lineHeight: 1 }}>×</button>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', flex: 1, overflow: 'hidden' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 320px', flex: 1, overflow: 'hidden' }}>
           {/* Left */}
           <div style={{ padding: '20px 24px', overflowY: 'auto', borderRight: '1px solid var(--mui-palette-divider)', display: 'flex', flexDirection: 'column', gap: 20 }}>
             {/* Color */}
@@ -308,6 +309,9 @@ export default function TimeboxView() {
   const [now,        setNow]        = useState(nowMinutes())
   const timelineRef  = useRef<HTMLDivElement>(null)
   const scrollRef    = useRef<HTMLDivElement>(null)
+  const bp     = useBreakpoint()
+  const mobile = isMobile(bp)
+  const tablet = isTablet(bp)
 
   useEffect(() => {
     const t = setInterval(() => setNow(nowMinutes()), 30000)
@@ -377,19 +381,20 @@ export default function TimeboxView() {
       </div>
 
       {/* Main layout */}
-      <div style={{ display: 'grid', gridTemplateColumns: showPanel ? '240px 1fr 300px' : '240px 1fr', gap: 14, alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : tablet ? '1fr' : showPanel ? '240px 1fr 300px' : '240px 1fr', gap: 14, alignItems: 'start' }}>
 
         {/* Unscheduled tasks */}
         <div>
           <div style={{ fontSize: '.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.6px', color: 'var(--mui-palette-text-disabled)', marginBottom: 10 }}>
             Unscheduled · {unscheduled.length}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+          {/* vertical list on desktop, horizontal scroll strip on mobile/tablet */}
+          <div style={{ display: 'flex', flexDirection: tablet ? 'row' : 'column', gap: 7, overflowX: tablet ? 'auto' : 'visible', paddingBottom: tablet ? 4 : 0 }}>
             {unscheduled.map(t => (
               <div key={t.id} draggable
                 onDragStart={() => setDragging({ taskId: t.id, durMin: t.dur })}
                 onDragEnd={() => { setDragging(null); setDragOver(null) }}
-                style={{ background: 'var(--mui-palette-background-paper)', borderRadius: 9, padding: '10px 12px', boxShadow: '0 1px 6px rgba(47,43,61,.08)', cursor: 'grab', border: `1.5px solid ${dragging?.taskId === t.id ? 'var(--mui-palette-primary-main)' : 'transparent'}`, opacity: dragging?.taskId === t.id ? 0.5 : 1, transition: 'all 150ms' }}>
+                style={{ background: 'var(--mui-palette-background-paper)', borderRadius: 9, padding: '10px 12px', boxShadow: '0 1px 6px rgba(47,43,61,.08)', cursor: 'grab', border: `1.5px solid ${dragging?.taskId === t.id ? 'var(--mui-palette-primary-main)' : 'transparent'}`, opacity: dragging?.taskId === t.id ? 0.5 : 1, transition: 'all 150ms', flexShrink: tablet ? 0 : undefined, minWidth: tablet ? 180 : undefined }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
                   <span style={{ fontSize: '.8125rem', fontWeight: 600, color: 'var(--mui-palette-text-primary)', flex: 1, lineHeight: 1.3 }}>{t.title}</span>
                   <PriorityDot priority={t.priority} />

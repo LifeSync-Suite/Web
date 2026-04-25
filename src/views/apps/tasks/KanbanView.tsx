@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { ALL_TASKS, COLUMNS, PRIORITY_COLOR, type Task, type TaskStatus } from './taskData'
+import { useBreakpoint, isMobile, isTablet } from '@/hooks/useBreakpoint'
 
 function Tag({ label, color }: { label: string; color: string }) {
   return (
@@ -147,8 +148,10 @@ function KanbanColumn({
 export default function KanbanView({ search }: { search: string }) {
   const [tasks, setTasks] = useState<Task[]>(ALL_TASKS)
   const [draggingId, setDraggingId] = useState<number | null>(null)
+  const bp = useBreakpoint()
 
   const filtered = tasks.filter(t => t.title.toLowerCase().includes(search.toLowerCase()))
+  const cols = isMobile(bp) ? '1fr' : isTablet(bp) ? '1fr 1fr' : 'repeat(4,minmax(0,1fr))'
 
   function handleDrop(targetStatus: TaskStatus) {
     if (draggingId === null) return
@@ -157,7 +160,7 @@ export default function KanbanView({ search }: { search: string }) {
   }
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,minmax(0,1fr))', gap: 14 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: cols, gap: 14 }}>
       {COLUMNS.map(col => (
         <KanbanColumn
           key={col.id}

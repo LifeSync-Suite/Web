@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import Typography from '@mui/material/Typography'
 import type { Locale } from '@configs/i18n'
 import { getLocalizedUrl } from '@/utils/i18n'
+import { useBreakpoint, isTablet, isMobile } from '@/hooks/useBreakpoint'
 
 // ─── Stat Card ────────────────────────────────────────────────────────────────
 
@@ -96,13 +97,21 @@ export default function OverviewDashboard() {
   const { lang: locale } = useParams()
   const l = (path: string) => getLocalizedUrl(path, locale as Locale)
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+  const bp = useBreakpoint()
+  const mobile = isMobile(bp)
+  const tablet = isTablet(bp)
 
-  const card = (bg: string) => ({
+  const card = () => ({
     background: 'var(--mui-palette-background-paper)',
     borderRadius: 12,
     boxShadow: '0 3px 12px rgba(47,43,61,.14)',
     padding: '20px',
   } as React.CSSProperties)
+
+  // grid helpers
+  const statCols   = mobile ? '1fr 1fr'                : tablet ? '1fr 1fr' : 'repeat(4,minmax(0,1fr))'
+  const mainCols   = mobile ? '1fr'                    : tablet ? '1fr 1fr' : 'repeat(3,minmax(0,1fr))'
+  const taskSpan   = mobile ? undefined                : tablet ? undefined  : 'span 2'
 
   return (
     <div>
@@ -116,7 +125,7 @@ export default function OverviewDashboard() {
       </div>
 
       {/* Stat cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,minmax(0,1fr))', gap: 16, marginBottom: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: statCols, gap: 16, marginBottom: 20 }}>
         <StatCard icon='tabler-checklist'   iconColor='#7367F0' iconBg='rgba(115,103,240,.12)' label='Tasks Today'  value='8/12'    sub='4 remaining'       subColor='#FF9F43' />
         <StatCard icon='tabler-flame'       iconColor='#28C76F' iconBg='rgba(40,199,111,.12)'  label='Habit Streak' value='12 days' sub='Best: 21 days' />
         <StatCard icon='tabler-clock'       iconColor='#C97C4A' iconBg='rgba(201,124,74,.12)'  label='Focus Today'  value='3h 20m'  sub='+40m vs yesterday'  subColor='#28C76F' />
@@ -124,10 +133,10 @@ export default function OverviewDashboard() {
       </div>
 
       {/* Main grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: mainCols, gap: 16 }}>
 
         {/* Goal Progress */}
-        <div style={card('')}>
+        <div style={card()}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
             <div>
               <div style={{ fontWeight: 600, fontSize: '.9375rem', color: 'var(--mui-palette-text-primary)' }}>Goal Progress</div>
@@ -143,7 +152,7 @@ export default function OverviewDashboard() {
         </div>
 
         {/* Habit Heatmap */}
-        <div style={card('')}>
+        <div style={card()}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <div>
               <div style={{ fontWeight: 600, fontSize: '.9375rem', color: 'var(--mui-palette-text-primary)' }}>Habit Tracker</div>
@@ -167,7 +176,7 @@ export default function OverviewDashboard() {
         </div>
 
         {/* Mood Map */}
-        <div style={card('')}>
+        <div style={card()}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <div>
               <div style={{ fontWeight: 600, fontSize: '.9375rem', color: 'var(--mui-palette-text-primary)' }}>Mood Map</div>
@@ -200,8 +209,8 @@ export default function OverviewDashboard() {
           <ViewBtn href={l('/apps/mood')} color='#00BAD1' bg='rgba(0,186,209,.08)'>Open journal →</ViewBtn>
         </div>
 
-        {/* Today's Tasks — spans 2 cols */}
-        <div style={{ ...card(''), gridColumn: 'span 2' }}>
+        {/* Today's Tasks — spans 2 cols on desktop */}
+        <div style={{ ...card(), gridColumn: taskSpan }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
             <div style={{ fontWeight: 600, fontSize: '.9375rem', color: 'var(--mui-palette-text-primary)' }}>Today&apos;s Tasks</div>
             <Link href={l('/apps/tasks')} style={{ background: 'rgba(201,124,74,.08)', color: 'var(--mui-palette-primary-main)', border: 'none', borderRadius: 6, padding: '5px 12px', fontSize: '.75rem', fontWeight: 600, textDecoration: 'none' }}>
@@ -227,7 +236,7 @@ export default function OverviewDashboard() {
         </div>
 
         {/* Focus Sessions */}
-        <div style={card('')}>
+        <div style={card()}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
             <div style={{ fontWeight: 600, fontSize: '.9375rem', color: 'var(--mui-palette-text-primary)' }}>Focus Sessions</div>
             <i className='tabler-clock' style={{ color: 'var(--mui-palette-primary-main)', fontSize: 20 }} />

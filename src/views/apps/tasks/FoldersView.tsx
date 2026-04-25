@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { ALL_TASKS, FOLDERS, STATUS_META, PRIORITY_COLOR, type Task } from './taskData'
+import { useBreakpoint, isMobile } from '@/hooks/useBreakpoint'
 
 function Tag({ label, color }: { label: string; color: string }) {
   return (
@@ -12,6 +13,7 @@ function Tag({ label, color }: { label: string; color: string }) {
 }
 
 export default function FoldersView({ search }: { search: string }) {
+  const mobile = isMobile(useBreakpoint())
   const [expanded, setExpanded] = useState<Record<string, boolean>>({
     Work: true, 'Book Project': true, Design: true, 'Personal Growth': true,
   })
@@ -51,8 +53,9 @@ export default function FoldersView({ search }: { search: string }) {
 
             {isOpen && (
               <div>
-                <div style={{ padding: '8px 20px', display: 'grid', gridTemplateColumns: '1fr 100px 130px 90px 60px', gap: 12, borderBottom: '1px solid var(--mui-palette-divider)' }}>
-                  {['Task', 'Tag', 'Status', 'Priority', 'Time'].map(h => (
+                {/* Table header — hide Tag/Status/Priority/Time cols on mobile */}
+                <div style={{ padding: '8px 20px', display: 'grid', gridTemplateColumns: mobile ? '1fr 90px' : '1fr 100px 130px 90px 60px', gap: 12, borderBottom: '1px solid var(--mui-palette-divider)' }}>
+                  {(mobile ? ['Task', 'Status'] : ['Task', 'Tag', 'Status', 'Priority', 'Time']).map(h => (
                     <div key={h} style={{ fontSize: '.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.5px', color: 'var(--mui-palette-text-disabled)' }}>{h}</div>
                   ))}
                 </div>
@@ -60,27 +63,27 @@ export default function FoldersView({ search }: { search: string }) {
                   const sm = STATUS_META[t.status]
                   return (
                     <div key={t.id}
-                      style={{ padding: '11px 20px', display: 'grid', gridTemplateColumns: '1fr 100px 130px 90px 60px', gap: 12, alignItems: 'center', borderBottom: i < folderTasks.length - 1 ? '1px solid var(--mui-palette-divider)' : 'none', transition: 'background 150ms', cursor: 'pointer' }}
+                      style={{ padding: '11px 20px', display: 'grid', gridTemplateColumns: mobile ? '1fr 90px' : '1fr 100px 130px 90px 60px', gap: 12, alignItems: 'center', borderBottom: i < folderTasks.length - 1 ? '1px solid var(--mui-palette-divider)' : 'none', transition: 'background 150ms', cursor: 'pointer' }}
                       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--mui-palette-action-hover)' }}
                       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 9, minWidth: 0 }}>
                         <div style={{ width: 16, height: 16, borderRadius: 4, border: `2px solid ${t.status === 'done' ? '#28C76F' : 'var(--mui-palette-divider)'}`, background: t.status === 'done' ? '#28C76F' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                           {t.status === 'done' && <i className='tabler-check' style={{ fontSize: 10, color: '#fff' }} />}
                         </div>
-                        <span style={{ fontSize: '.8125rem', color: t.status === 'done' ? 'var(--mui-palette-text-disabled)' : 'var(--mui-palette-text-primary)', fontWeight: 500, textDecoration: t.status === 'done' ? 'line-through' : 'none' }}>{t.title}</span>
+                        <span style={{ fontSize: '.8125rem', color: t.status === 'done' ? 'var(--mui-palette-text-disabled)' : 'var(--mui-palette-text-primary)', fontWeight: 500, textDecoration: t.status === 'done' ? 'line-through' : 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</span>
                       </div>
-                      <div><Tag label={t.tag} color={t.tagColor} /></div>
+                      {!mobile && <div><Tag label={t.tag} color={t.tagColor} /></div>}
                       <div>
                         <span style={{ background: `${sm.color}15`, color: sm.color, fontSize: '.65rem', fontWeight: 700, padding: '3px 9px', borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
                           <span style={{ width: 5, height: 5, borderRadius: '50%', background: sm.color, display: 'inline-block' }} />{sm.label}
                         </span>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                      {!mobile && <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                         <span style={{ width: 7, height: 7, borderRadius: '50%', background: PRIORITY_COLOR[t.priority], display: 'inline-block' }} />
                         <span style={{ fontSize: '.75rem', color: PRIORITY_COLOR[t.priority], fontWeight: 600, textTransform: 'capitalize' }}>{t.priority}</span>
-                      </div>
-                      <div style={{ fontSize: '.75rem', color: 'var(--mui-palette-text-disabled)' }}>{t.dur}m</div>
+                      </div>}
+                      {!mobile && <div style={{ fontSize: '.75rem', color: 'var(--mui-palette-text-disabled)' }}>{t.dur}m</div>}
                     </div>
                   )
                 })}

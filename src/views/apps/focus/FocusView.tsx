@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Box from '@mui/material/Box'
+import { useBreakpoint, isTablet } from '@/hooks/useBreakpoint'
 
 const TEMPLATES = [
   { id: 'deep',  label: 'Deep Work', focus: 50, break: 10, color: '#C97C4A', icon: 'tabler-brain' },
@@ -87,10 +88,12 @@ const FocusView = () => {
   const R    = 80
   const C    = 2 * Math.PI * R
   const dash = C - (pct / 100) * C
+  const bp   = useBreakpoint()
+  const stacked = isTablet(bp)
 
   return (
     <Box sx={{ maxWidth: 900 }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: stacked ? '1fr' : '1fr 320px', gap: 16 }}>
 
         {/* Timer card */}
         <div style={{ background: 'var(--mui-palette-background-paper)', borderRadius: 16, boxShadow: '0 3px 12px rgba(47,43,61,.14)', padding: '32px 28px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
