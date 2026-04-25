@@ -13,7 +13,7 @@ export const metadata = {
 
 const TasksPage = () => {
   return (
-    <div className={classnames(commonLayoutClasses.contentHeightFixed, 'flex flex-col overflow-hidden')}>
+    <div className={classnames(commonLayoutClasses.contentHeightFixed, 'flex flex-col is-full min-is-0 overflow-hidden')}>
       <TasksView />
     </div>
   )
