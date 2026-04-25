@@ -44,7 +44,7 @@ const Footer = ({ mode }: { mode: Mode }) => {
           <Grid container rowSpacing={10} columnSpacing={12}>
             <Grid item xs={12} lg={5}>
               <div className='flex flex-col items-start gap-6'>
-                <Link href='/front-pages/landing-page'>
+                <Link href='/'>
                   <Logo color='var(--mui-palette-common-white)' />
                 </Link>
                 <Typography color='white' className='md:max-is-[390px] opacity-[78]'>
@@ -115,16 +115,16 @@ const Footer = ({ mode }: { mode: Mode }) => {
                 Products
               </Typography>
               <div className='flex flex-col gap-4'>
-                <Typography component={Link} href='/front-pages/landing-page' color='white' className='opacity-[78]'>
+                <Typography component={Link} href='/' color='white' className='opacity-[78]'>
                   Page builder
                 </Typography>
-                <Typography component={Link} href='/front-pages/landing-page' color='white' className='opacity-[78]'>
+                <Typography component={Link} href='/' color='white' className='opacity-[78]'>
                   Admin Dashboards
                 </Typography>
-                <Typography component={Link} href='/front-pages/landing-page' color='white' className='opacity-[78]'>
+                <Typography component={Link} href='/' color='white' className='opacity-[78]'>
                   UI Kits
                 </Typography>
-                <Typography component={Link} href='/front-pages/landing-page' color='white' className='opacity-[78]'>
+                <Typography component={Link} href='/' color='white' className='opacity-[78]'>
                   Illustrations
                 </Typography>
               </div>

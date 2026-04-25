@@ -91,14 +91,14 @@ const FrontMenu = (props: Props) => {
       <Typography
         color='text.primary'
         component={Link}
-        href='/front-pages/landing-page'
+        href='/'
         className={classnames('font-medium plb-3 pli-1.5 hover:text-primary', {
           'text-primary':
             !intersections.features &&
             !intersections.team &&
             !intersections.faq &&
             !intersections['contact-us'] &&
-            pathname === '/front-pages/landing-page'
+            pathname === '/'
         })}
       >
         Home
@@ -106,7 +106,7 @@ const FrontMenu = (props: Props) => {
       <Typography
         color='text.primary'
         component={Link}
-        href='/front-pages/landing-page#features'
+        href='/#features'
         className={classnames('font-medium plb-3 pli-1.5 hover:text-primary', {
           'text-primary': intersections.features
         })}
@@ -116,7 +116,7 @@ const FrontMenu = (props: Props) => {
       <Typography
         color='text.primary'
         component={Link}
-        href='/front-pages/landing-page#team'
+        href='/#team'
         className={classnames('font-medium plb-3 pli-1.5 hover:text-primary', {
           'text-primary': intersections.team
         })}
@@ -126,7 +126,7 @@ const FrontMenu = (props: Props) => {
       <Typography
         color='text.primary'
         component={Link}
-        href='/front-pages/landing-page#faq'
+        href='/#faq'
         className={classnames('font-medium plb-3 pli-1.5 hover:text-primary', {
           'text-primary': intersections.faq
         })}
@@ -136,7 +136,7 @@ const FrontMenu = (props: Props) => {
       <Typography
         color='text.primary'
         component={Link}
-        href='/front-pages/landing-page#contact-us'
+        href='/#contact-us'
         className={classnames('font-medium plb-3 pli-1.5 hover:text-primary', {
           'text-primary': intersections['contact-us']
         })}
