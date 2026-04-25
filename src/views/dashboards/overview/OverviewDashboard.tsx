@@ -105,7 +105,7 @@ export default function OverviewDashboard() {
   } as React.CSSProperties)
 
   return (
-    <div style={{ maxWidth: 1200 }}>
+    <div>
 
       {/* Welcome */}
       <div style={{ marginBottom: 24 }}>
@@ -116,7 +116,7 @@ export default function OverviewDashboard() {
       </div>
 
       {/* Stat cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,minmax(0,1fr))', gap: 16, marginBottom: 20 }}>
         <StatCard icon='tabler-checklist'   iconColor='#7367F0' iconBg='rgba(115,103,240,.12)' label='Tasks Today'  value='8/12'    sub='4 remaining'       subColor='#FF9F43' />
         <StatCard icon='tabler-flame'       iconColor='#28C76F' iconBg='rgba(40,199,111,.12)'  label='Habit Streak' value='12 days' sub='Best: 21 days' />
         <StatCard icon='tabler-clock'       iconColor='#C97C4A' iconBg='rgba(201,124,74,.12)'  label='Focus Today'  value='3h 20m'  sub='+40m vs yesterday'  subColor='#28C76F' />
@@ -124,7 +124,7 @@ export default function OverviewDashboard() {
       </div>
 
       {/* Main grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 16 }}>
 
         {/* Goal Progress */}
         <div style={card('')}>
