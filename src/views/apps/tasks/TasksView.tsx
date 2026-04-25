@@ -38,15 +38,15 @@ export default function TasksView() {
       {/* ── Toolbar (never scrolls) ── */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16, flexShrink: 0 }}>
 
-        {/* Row 1: view tabs only */}
-        <div style={{ display: 'flex', background: 'var(--mui-palette-background-paper)', borderRadius: 10, padding: 4, boxShadow: '0 1px 4px rgba(47,43,61,.1)', gap: 2, alignSelf: 'flex-start' }}>
-          <button style={tabStyle('kanban')} onClick={() => setView('kanban')}>
+        {/* Row 1: view tabs — full width, each tab takes equal share */}
+        <div style={{ display: 'flex', background: 'var(--mui-palette-background-paper)', borderRadius: 10, padding: 4, boxShadow: '0 1px 4px rgba(47,43,61,.1)', gap: 2 }}>
+          <button style={{ ...tabStyle('kanban'), flex: 1, justifyContent: 'center' }} onClick={() => setView('kanban')}>
             <i className='tabler-layout-kanban' style={{ fontSize: 15 }} /> Kanban
           </button>
-          <button style={tabStyle('timebox')} onClick={() => setView('timebox')}>
+          <button style={{ ...tabStyle('timebox'), flex: 1, justifyContent: 'center' }} onClick={() => setView('timebox')}>
             <i className='tabler-timeline' style={{ fontSize: 15 }} /> Timebox
           </button>
-          <button style={tabStyle('folders')} onClick={() => setView('folders')}>
+          <button style={{ ...tabStyle('folders'), flex: 1, justifyContent: 'center' }} onClick={() => setView('folders')}>
             <i className='tabler-folder' style={{ fontSize: 15 }} /> Folders
           </button>
         </div>
