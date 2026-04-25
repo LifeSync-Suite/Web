@@ -1,6 +1,7 @@
 'use client'
 
-import { ALL_TASKS, COLUMNS, PRIORITY_COLOR, type Task } from './taskData'
+import { useState, useRef } from 'react'
+import { ALL_TASKS, COLUMNS, PRIORITY_COLOR, type Task, type TaskStatus } from './taskData'
 
 function Tag({ label, color }: { label: string; color: string }) {
   return (
@@ -14,9 +15,36 @@ function PriorityDot({ priority }: { priority: Task['priority'] }) {
   return <span style={{ width: 7, height: 7, borderRadius: '50%', background: PRIORITY_COLOR[priority], display: 'inline-block', flexShrink: 0 }} />
 }
 
-function KanbanCard({ task }: { task: Task }) {
+// ─── Card ─────────────────────────────────────────────────────────────────────
+
+function KanbanCard({
+  task,
+  onDragStart,
+  onDragEnd,
+  isDragging,
+}: {
+  task: Task
+  onDragStart: () => void
+  onDragEnd: () => void
+  isDragging: boolean
+}) {
   return (
-    <div style={{ background: 'var(--mui-palette-background-paper)', borderRadius: 9, padding: '12px 13px', marginBottom: 8, boxShadow: '0 1px 6px rgba(47,43,61,.09)', cursor: 'grab' }}>
+    <div
+      draggable
+      onDragStart={e => { e.dataTransfer.effectAllowed = 'move'; onDragStart() }}
+      onDragEnd={onDragEnd}
+      style={{
+        background: 'var(--mui-palette-background-paper)',
+        borderRadius: 9,
+        padding: '12px 13px',
+        marginBottom: 8,
+        boxShadow: '0 1px 6px rgba(47,43,61,.09)',
+        cursor: 'grab',
+        opacity: isDragging ? 0.4 : 1,
+        transition: 'opacity 150ms, box-shadow 150ms',
+        userSelect: 'none',
+      }}
+    >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 7 }}>
         <span style={{ fontSize: '.8125rem', fontWeight: 500, color: 'var(--mui-palette-text-primary)', lineHeight: 1.4, flex: 1 }}>{task.title}</span>
         <PriorityDot priority={task.priority} />
@@ -39,29 +67,108 @@ function KanbanCard({ task }: { task: Task }) {
   )
 }
 
-export default function KanbanView({ search }: { search: string }) {
-  const filtered = ALL_TASKS.filter(t => t.title.toLowerCase().includes(search.toLowerCase()))
+// ─── Column drop zone ─────────────────────────────────────────────────────────
+
+function KanbanColumn({
+  col,
+  tasks,
+  draggingId,
+  onDragStart,
+  onDragEnd,
+  onDrop,
+}: {
+  col: typeof COLUMNS[number]
+  tasks: Task[]
+  draggingId: number | null
+  onDragStart: (id: number) => void
+  onDragEnd: () => void
+  onDrop: (targetStatus: TaskStatus) => void
+}) {
+  const [isOver, setIsOver] = useState(false)
+  // track whether anything is being dragged over this column
+  // use a counter to handle child enter/leave correctly
+  const enterCount = useRef(0)
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14 }}>
-      {COLUMNS.map(col => {
-        const colTasks = filtered.filter(t => t.status === col.id)
-        return (
-          <div key={col.id}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 }}>
-              <span style={{ width: 9, height: 9, borderRadius: '50%', background: col.color, flexShrink: 0 }} />
-              <span style={{ fontWeight: 600, fontSize: '.8rem', color: 'var(--mui-palette-text-secondary)' }}>{col.label}</span>
-              <span style={{ marginLeft: 'auto', background: 'var(--mui-palette-action-selected)', color: 'var(--mui-palette-text-disabled)', fontSize: '.7rem', fontWeight: 600, padding: '1px 7px', borderRadius: 9999 }}>{colTasks.length}</span>
-            </div>
-            <div style={{ background: 'var(--mui-palette-action-hover)', borderRadius: 10, padding: '10px 8px', minHeight: 120 }}>
-              {colTasks.map(t => <KanbanCard key={t.id} task={t} />)}
-              <button style={{ width: '100%', background: 'transparent', border: '1px dashed var(--mui-palette-divider)', borderRadius: 8, padding: '7px', fontSize: '.75rem', color: 'var(--mui-palette-text-disabled)', cursor: 'pointer', marginTop: 2 }}>
-                <i className='tabler-plus' style={{ marginRight: 4 }} />Add task
-              </button>
-            </div>
-          </div>
-        )
-      })}
+    <div
+      onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move' }}
+      onDragEnter={() => { enterCount.current++; setIsOver(true) }}
+      onDragLeave={() => { enterCount.current--; if (enterCount.current === 0) setIsOver(false) }}
+      onDrop={e => {
+        e.preventDefault()
+        enterCount.current = 0
+        setIsOver(false)
+        onDrop(col.id as TaskStatus)
+      }}
+    >
+      {/* Column header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 }}>
+        <span style={{ width: 9, height: 9, borderRadius: '50%', background: col.color, flexShrink: 0 }} />
+        <span style={{ fontWeight: 600, fontSize: '.8rem', color: 'var(--mui-palette-text-secondary)' }}>{col.label}</span>
+        <span style={{ marginLeft: 'auto', background: 'var(--mui-palette-action-selected)', color: 'var(--mui-palette-text-disabled)', fontSize: '.7rem', fontWeight: 600, padding: '1px 7px', borderRadius: 9999 }}>
+          {tasks.length}
+        </span>
+      </div>
+
+      {/* Card list */}
+      <div style={{
+        background: isOver ? `${col.color}0e` : 'var(--mui-palette-action-hover)',
+        borderRadius: 10,
+        padding: '10px 8px',
+        minHeight: 120,
+        border: `2px solid ${isOver ? col.color + '50' : 'transparent'}`,
+        transition: 'background 150ms, border 150ms',
+      }}>
+        {tasks.map(t => (
+          <KanbanCard
+            key={t.id}
+            task={t}
+            isDragging={draggingId === t.id}
+            onDragStart={() => onDragStart(t.id)}
+            onDragEnd={onDragEnd}
+          />
+        ))}
+
+        {/* Drop hint when hovering with a card */}
+        {isOver && draggingId !== null && (
+          <div style={{ height: 4, borderRadius: 9999, background: col.color, opacity: 0.5, marginBottom: 8 }} />
+        )}
+
+        <button style={{ width: '100%', background: 'transparent', border: '1px dashed var(--mui-palette-divider)', borderRadius: 8, padding: '7px', fontSize: '.75rem', color: 'var(--mui-palette-text-disabled)', cursor: 'pointer', marginTop: 2 }}>
+          <i className='tabler-plus' style={{ marginRight: 4 }} />Add task
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ─── Main view ────────────────────────────────────────────────────────────────
+
+export default function KanbanView({ search }: { search: string }) {
+  const [tasks, setTasks] = useState<Task[]>(ALL_TASKS)
+  const [draggingId, setDraggingId] = useState<number | null>(null)
+
+  const filtered = tasks.filter(t => t.title.toLowerCase().includes(search.toLowerCase()))
+
+  function handleDrop(targetStatus: TaskStatus) {
+    if (draggingId === null) return
+    setTasks(prev => prev.map(t => t.id === draggingId ? { ...t, status: targetStatus } : t))
+    setDraggingId(null)
+  }
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,minmax(0,1fr))', gap: 14 }}>
+      {COLUMNS.map(col => (
+        <KanbanColumn
+          key={col.id}
+          col={col}
+          tasks={filtered.filter(t => t.status === col.id)}
+          draggingId={draggingId}
+          onDragStart={setDraggingId}
+          onDragEnd={() => setDraggingId(null)}
+          onDrop={handleDrop}
+        />
+      ))}
     </div>
   )
 }
