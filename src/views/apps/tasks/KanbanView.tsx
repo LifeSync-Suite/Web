@@ -151,7 +151,8 @@ export default function KanbanView({ search }: { search: string }) {
   const bp = useBreakpoint()
 
   const filtered = tasks.filter(t => t.title.toLowerCase().includes(search.toLowerCase()))
-  const cols = isMobile(bp) ? '1fr' : isTablet(bp) ? '1fr 1fr' : 'repeat(4,minmax(0,1fr))'
+  const mobile = isMobile(bp)
+  const tablet = isTablet(bp)
 
   function handleDrop(targetStatus: TaskStatus) {
     if (draggingId === null) return
@@ -159,8 +160,32 @@ export default function KanbanView({ search }: { search: string }) {
     setDraggingId(null)
   }
 
+  // Mobile: horizontal scroll with fixed-width columns
+  // Tablet: 2-col grid
+  // Desktop: 4-col grid
+  if (mobile) {
+    return (
+      <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as any, marginInline: -24, paddingInline: 24 }}>
+        <div style={{ display: 'flex', gap: 12, width: 'max-content', paddingBottom: 8 }}>
+          {COLUMNS.map(col => (
+            <div key={col.id} style={{ width: 260, flexShrink: 0 }}>
+              <KanbanColumn
+                col={col}
+                tasks={filtered.filter(t => t.status === col.id)}
+                draggingId={draggingId}
+                onDragStart={setDraggingId}
+                onDragEnd={() => setDraggingId(null)}
+                onDrop={handleDrop}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: cols, gap: 14 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: tablet ? '1fr 1fr' : 'repeat(4,minmax(0,1fr))', gap: 14 }}>
       {COLUMNS.map(col => (
         <KanbanColumn
           key={col.id}
