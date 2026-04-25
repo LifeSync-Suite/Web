@@ -120,13 +120,66 @@ function KanbanColumn({ col, tasks, draggingId, isOver, onPointerDown }: {
 
 // ─── Board ────────────────────────────────────────────────────────────────────
 
+const EDGE_SIZE = 80   // px from edge to trigger scroll
+const MAX_SPEED = 18   // max px per frame
+
+function getScrollSpeed(pos: number, start: number, end: number): number {
+  if (pos < start + EDGE_SIZE) {
+    // left/top edge — scroll negative
+    return -MAX_SPEED * (1 - (pos - start) / EDGE_SIZE)
+  }
+  if (pos > end - EDGE_SIZE) {
+    // right/bottom edge — scroll positive
+    return MAX_SPEED * (1 - (end - pos) / EDGE_SIZE)
+  }
+  return 0
+}
+
 export default function KanbanView({ search }: { search: string }) {
-  const [tasks, setTasks]       = useState<Task[]>(ALL_TASKS)
+  const [tasks, setTasks]        = useState<Task[]>(ALL_TASKS)
   const [draggingId, setDragging] = useState<number | null>(null)
-  const [overColId, setOverCol]  = useState<string | null>(null)
-  const dragRef = useRef<DragState | null>(null)
+  const [overColId, setOverCol]   = useState<string | null>(null)
+  const dragRef     = useRef<DragState | null>(null)
+  const scrollElRef = useRef<Element | null>(null)  // nearest scrollable ancestor
+  const rafRef      = useRef<number | null>(null)
+  const pointerPos  = useRef<{ x: number; y: number }>({ x: 0, y: 0 })
 
   const filtered = tasks.filter(t => t.title.toLowerCase().includes(search.toLowerCase()))
+
+  // Cancel auto-scroll rAF loop
+  function stopAutoScroll() {
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current)
+      rafRef.current = null
+    }
+  }
+
+  // Walk up the DOM to find the nearest element that can scroll horizontally
+  function findScrollParent(el: HTMLElement): Element | null {
+    let node: HTMLElement | null = el.parentElement
+    while (node) {
+      const style = window.getComputedStyle(node)
+      const overflow = style.overflow + style.overflowX
+      if (/auto|scroll/.test(overflow) && node.scrollWidth > node.clientWidth) return node
+      node = node.parentElement
+    }
+    return document.documentElement
+  }
+
+  // Start rAF loop that scrolls the nearest overflow container while dragging near edges
+  function startAutoScroll() {
+    stopAutoScroll()
+    function tick() {
+      const el = scrollElRef.current as HTMLElement | null
+      if (!el || !dragRef.current) return
+      const rect = el.getBoundingClientRect()
+      const { x } = pointerPos.current
+      const dx = getScrollSpeed(x, rect.left, rect.right)
+      if (dx !== 0) el.scrollLeft += dx
+      rafRef.current = requestAnimationFrame(tick)
+    }
+    rafRef.current = requestAnimationFrame(tick)
+  }
 
   // Find the column id from a point on screen
   function colAtPoint(x: number, y: number): string | null {
@@ -147,6 +200,7 @@ export default function KanbanView({ search }: { search: string }) {
 
     // Build a ghost clone
     const source = e.currentTarget as HTMLElement
+    scrollElRef.current = findScrollParent(source)
     const rect   = source.getBoundingClientRect()
     const ghost  = source.cloneNode(true) as HTMLDivElement
     ghost.style.cssText = `
@@ -170,14 +224,17 @@ export default function KanbanView({ search }: { search: string }) {
       offsetX: e.clientX - rect.left,
       offsetY: e.clientY - rect.top,
     }
+    pointerPos.current = { x: e.clientX, y: e.clientY }
     setDragging(taskId)
     setOverCol(null)
+    startAutoScroll()
   }, [])
 
   useEffect(() => {
     function onPointerMove(e: PointerEvent) {
       const d = dragRef.current
       if (!d) return
+      pointerPos.current = { x: e.clientX, y: e.clientY }
       d.ghost.style.left = `${e.clientX - d.offsetX}px`
       d.ghost.style.top  = `${e.clientY - d.offsetY}px`
       const col = colAtPoint(e.clientX, e.clientY)
@@ -187,6 +244,7 @@ export default function KanbanView({ search }: { search: string }) {
     function onPointerUp(e: PointerEvent) {
       const d = dragRef.current
       if (!d) return
+      stopAutoScroll()
       const col = colAtPoint(e.clientX, e.clientY)
       if (col) {
         setTasks(prev => prev.map(t => t.id === d.taskId ? { ...t, status: col as TaskStatus } : t))
@@ -204,6 +262,7 @@ export default function KanbanView({ search }: { search: string }) {
       window.removeEventListener('pointermove', onPointerMove)
       window.removeEventListener('pointerup', onPointerUp)
       window.removeEventListener('pointercancel', onPointerUp)
+      stopAutoScroll()
     }
   }, [])
 
