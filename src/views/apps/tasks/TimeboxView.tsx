@@ -306,7 +306,8 @@ export default function TimeboxView() {
   const [dragging,   setDragging]   = useState<{ taskId: number; durMin: number } | null>(null)
   const [dragOver,   setDragOver]   = useState<number | null>(null)
   const [now,        setNow]        = useState(nowMinutes())
-  const timelineRef = useRef<HTMLDivElement>(null)
+  const timelineRef  = useRef<HTMLDivElement>(null)
+  const scrollRef    = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const t = setInterval(() => setNow(nowMinutes()), 30000)
@@ -319,8 +320,10 @@ export default function TimeboxView() {
 
   function snapToSlot(y: number) {
     if (!timelineRef.current) return 0
-    const rect = timelineRef.current.getBoundingClientRect()
-    const relY  = Math.max(0, y - rect.top)
+    const rect      = timelineRef.current.getBoundingClientRect()
+    const scrollTop = scrollRef.current?.scrollTop ?? 0
+    // account for paddingTop:8 on the drop zone and the scroll offset of the container
+    const relY  = Math.max(0, y - rect.top + scrollTop - 8)
     const mins  = Math.round((relY / HOUR_PX) * 60 / 15) * 15
     return Math.min(Math.max(0, mins), TOTAL_MINS - 15)
   }
@@ -408,7 +411,7 @@ export default function TimeboxView() {
         </div>
 
         {/* Timeline */}
-        <div style={{ background: 'var(--mui-palette-background-paper)', borderRadius: 14, boxShadow: '0 3px 12px rgba(47,43,61,.14)', overflow: 'hidden' }}>
+        <div style={{ background: 'var(--mui-palette-background-paper)', borderRadius: 14, boxShadow: '0 3px 12px rgba(47,43,61,.14)', overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '80vh' }}>
           <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--mui-palette-divider)', display: 'flex', alignItems: 'center', gap: 10 }}>
             <i className='tabler-calendar-time' style={{ color: 'var(--mui-palette-primary-main)', fontSize: 18 }} />
             <span style={{ fontWeight: 700, fontSize: '.9rem', color: 'var(--mui-palette-text-primary)' }}>Today&apos;s Timeline</span>
@@ -417,7 +420,7 @@ export default function TimeboxView() {
             </span>
           </div>
 
-          <div style={{ display: 'flex', padding: '0 0 16px' }}>
+          <div ref={scrollRef} style={{ display: 'flex', padding: '0 0 16px', overflowY: 'auto', flex: 1 }}>
             {/* Hour labels */}
             <div style={{ width: 52, flexShrink: 0, paddingTop: 8 }}>
               {Array.from({ length: DAY_END - DAY_START + 1 }, (_, i) => i + DAY_START).map(h => (
@@ -480,6 +483,7 @@ export default function TimeboxView() {
                 return (
                   <div key={s.taskId} draggable
                     onDragStart={() => setDragging({ taskId: s.taskId, durMin: s.durMin })}
+                    onDragEnd={() => { setDragging(null); setDragOver(null) }}
                     style={{ position: 'absolute', left: 4, right: 0, top, height, background: `${task.tagColor}20`, border: `1.5px solid ${task.tagColor}60`, borderLeft: `3px solid ${task.tagColor}`, borderRadius: 7, padding: '4px 8px', cursor: 'grab', zIndex: 3, overflow: 'hidden' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <span style={{ fontSize: '.7rem', fontWeight: 700, color: 'var(--mui-palette-text-primary)', lineHeight: 1.3 }}>{task.title}</span>
