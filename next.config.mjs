@@ -16,6 +16,13 @@ const nextConfig = {
         permanent: false,
         locale: false
       },
+      // / → /en (landing page)
+      {
+        source: '/',
+        destination: '/en',
+        permanent: false,
+        locale: false
+      },
       // Non-localised paths get prefixed with /en
       {
         source: '/((?!(?:en|fr|ar|front-pages|favicon.ico)\\b)):path',
