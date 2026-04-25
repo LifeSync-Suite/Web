@@ -21,11 +21,10 @@ import Divider from '@mui/material/Divider'
 import MenuItem from '@mui/material/MenuItem'
 import Button from '@mui/material/Button'
 
-// Third-party Imports
-import { signOut, useSession } from 'next-auth/react'
-
 // Type Imports
 import type { Locale } from '@configs/i18n'
+
+const FAKE_USER = { name: 'Alex Johnson', email: 'alex@lifesync.app', image: '' }
 
 // Hook Imports
 import { useSettings } from '@core/hooks/useSettings'
@@ -52,7 +51,7 @@ const UserDropdown = () => {
 
   // Hooks
   const router = useRouter()
-  const { data: session } = useSession()
+  const session = { user: FAKE_USER }
   const { settings } = useSettings()
   const { lang: locale } = useParams()
 
@@ -72,16 +71,8 @@ const UserDropdown = () => {
     setOpen(false)
   }
 
-  const handleUserLogout = async () => {
-    try {
-      // Sign out from the app
-      await signOut({ callbackUrl: process.env.NEXT_PUBLIC_APP_URL })
-    } catch (error) {
-      console.error(error)
-
-      // Show above error in a toast like following
-      // toastService.error((err as Error).message)
-    }
+  const handleUserLogout = () => {
+    router.push(`/${locale}/login`)
   }
 
   return (
