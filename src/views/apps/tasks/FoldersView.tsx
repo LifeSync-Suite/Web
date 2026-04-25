@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { ALL_TASKS, FOLDERS, STATUS_META, PRIORITY_COLOR, type Task } from './taskData'
-import { useBreakpoint, isMobile } from '@/hooks/useBreakpoint'
+import { isMobile, useBreakpoint } from '@/hooks/useBreakpoint'
 
 function Tag({ label, color }: { label: string; color: string }) {
   return (
