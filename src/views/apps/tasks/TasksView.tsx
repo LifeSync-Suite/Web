@@ -62,7 +62,7 @@ export default function TasksView() {
                     style={{ border: 'none', background: 'transparent', fontSize: '.8125rem', color: 'var(--mui-palette-text-primary)', flex: 1, outline: 'none', fontFamily: 'inherit', minWidth: 0 }} />
                 </div>
               )}
-              <button style={{ flexShrink: 0, marginLeft: view === 'timebox' ? 'auto' : 0, background: 'var(--mui-palette-primary-main)', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: '.8125rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6, boxShadow: '0 2px 6px rgba(201,124,74,.3)', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+              <button style={{ flexShrink: 0, width: view === 'timebox' ? '100%' : undefined, justifyContent: 'center', background: 'var(--mui-palette-primary-main)', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: '.8125rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6, boxShadow: '0 2px 6px rgba(201,124,74,.3)', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
                 <i className='tabler-plus' style={{ fontSize: 15 }} /> New Task
               </button>
             </div>
@@ -97,7 +97,7 @@ export default function TasksView() {
       </div>
 
       {/* ── Board area (scrolls) ── */}
-      <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
+      <div style={{ flex: 1, minHeight: 0, minWidth: 0, overflow: 'auto' }}>
         {view === 'kanban'  && <KanbanView  search={search} />}
         {view === 'timebox' && <TimeboxView />}
         {view === 'folders' && <FoldersView search={search} />}

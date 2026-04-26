@@ -392,10 +392,10 @@ export default function TimeboxView() {
     : showPanel ? '240px 1fr 300px' : '240px 1fr'
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 0, width: '100%', minWidth: 0 }}>
 
       {/* Toolbar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, minWidth: 0 }}>
         {activeTemplate ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 7, background: `${activeTemplate.color}12`, border: `1px solid ${activeTemplate.color}30`, borderRadius: 8, padding: '6px 12px', minWidth: 0, overflow: 'hidden' }}>
             <div style={{ width: 7, height: 7, borderRadius: '50%', background: activeTemplate.color, flexShrink: 0 }} />
@@ -413,10 +413,10 @@ export default function TimeboxView() {
       </div>
 
       {/* Main layout */}
-      <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: 14, alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: 14, alignItems: 'start', minWidth: 0 }}>
 
         {/* Unscheduled tasks — horizontal scroll on compact */}
-        <div>
+        <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: '.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.6px', color: 'var(--mui-palette-text-disabled)', marginBottom: 10 }}>
             Unscheduled · {unscheduled.length}
           </div>
@@ -447,7 +447,7 @@ export default function TimeboxView() {
         </div>
 
         {/* Timeline */}
-        <div style={{ background: 'var(--mui-palette-background-paper)', borderRadius: 14, boxShadow: '0 3px 12px rgba(47,43,61,.14)', overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '80vh' }}>
+        <div style={{ background: 'var(--mui-palette-background-paper)', borderRadius: 14, boxShadow: '0 3px 12px rgba(47,43,61,.14)', overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '80vh', minWidth: 0 }}>
           <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--mui-palette-divider)', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
             <i className='tabler-calendar-time' style={{ color: 'var(--mui-palette-primary-main)', fontSize: 18 }} />
             <span style={{ fontWeight: 700, fontSize: '.9rem', color: 'var(--mui-palette-text-primary)' }}>Today&apos;s Timeline</span>
