@@ -499,7 +499,7 @@ export default function TimeboxView() {
         </div>
 
         {/* Timeline */}
-        <div style={{ background: 'var(--mui-palette-background-paper)', borderRadius: 14, boxShadow: '0 3px 12px rgba(47,43,61,.14)', overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '80vh', minWidth: 0 }}>
+        <div style={{ background: 'var(--mui-palette-background-paper)', borderRadius: 14, boxShadow: '0 3px 12px rgba(47,43,61,.14)', overflow: 'hidden', display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--mui-palette-divider)', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
             <i className='tabler-calendar-time' style={{ color: 'var(--mui-palette-primary-main)', fontSize: 18 }} />
             <span style={{ fontWeight: 700, fontSize: '.9rem', color: 'var(--mui-palette-text-primary)' }}>Today&apos;s Timeline</span>
