@@ -338,10 +338,21 @@ export default function TimeboxView() {
   const [draggingId, setDraggingId] = useState<number | null>(null)
   const [dragSlot,   setDragSlot]   = useState<number | null>(null)
   const [now,        setNow]        = useState(nowMinutes())
-  const timelineRef = useRef<HTMLDivElement>(null)
-  const scrollRef   = useRef<HTMLDivElement>(null)
-  // pointer drag state
-  const ptrRef = useRef<{ taskId: number; durMin: number; ghost: HTMLElement } | null>(null)
+  const timelineRef    = useRef<HTMLDivElement>(null)
+  const scrollRef      = useRef<HTMLDivElement>(null)
+  const unscheduledRef = useRef<HTMLDivElement>(null)
+  // pointer drag state — `pending` means waiting to confirm vertical drag intent
+  const ptrRef = useRef<{
+    taskId: number
+    durMin: number
+    startX: number
+    startY: number
+    pointerId: number
+    sourceEl: HTMLElement
+    ghost: HTMLElement | null   // null until drag is confirmed
+    rafId: number | null
+  } | null>(null)
+  const lastPointer = useRef<{ x: number; y: number }>({ x: 0, y: 0 })
   const bp      = useBreakpoint()
   const mobile  = isMobile(bp)
   const tablet  = isTablet(bp)
@@ -366,35 +377,90 @@ export default function TimeboxView() {
     return Math.min(Math.max(0, mins), TOTAL_MINS - 15)
   }
 
-  function isOverTimeline(clientX: number, clientY: number) {
-    if (!timelineRef.current) return false
-    const rect = timelineRef.current.getBoundingClientRect()
-    return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom
+  function isOverEl(el: HTMLElement | null, x: number, y: number) {
+    if (!el) return false
+    const r = el.getBoundingClientRect()
+    return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom
   }
 
-  // Pointer-based drag — works on mouse and touch
+  // Pointer-based drag — works on mouse and touch.
+  // Drag only activates after vertical movement exceeds horizontal (lets horizontal scroll work).
+  const DRAG_THRESHOLD = 8
+  const SCROLL_EDGE    = 80
+  const SCROLL_SPEED   = 14
+
   const onCardPointerDown = useCallback((e: React.PointerEvent, taskId: number, durMin: number) => {
     if (e.pointerType === 'mouse' && e.button !== 0) return
-    e.currentTarget.setPointerCapture(e.pointerId)
-    const src  = e.currentTarget as HTMLElement
-    const rect = src.getBoundingClientRect()
-    const ghost = src.cloneNode(true) as HTMLElement
-    ghost.style.cssText = `position:fixed;left:${rect.left}px;top:${rect.top}px;width:${rect.width}px;pointer-events:none;z-index:9999;opacity:.85;border-radius:9px;box-shadow:0 8px 32px rgba(0,0,0,.22);transform:rotate(2deg) scale(1.03);transition:none;`
-    document.body.appendChild(ghost)
-    ptrRef.current = { taskId, durMin, ghost }
-    setDraggingId(taskId)
-    setDragSlot(null)
+    const src = e.currentTarget as HTMLElement
+    ptrRef.current = {
+      taskId, durMin,
+      startX: e.clientX, startY: e.clientY,
+      pointerId: e.pointerId,
+      sourceEl: src,
+      ghost: null,
+      rafId: null,
+    }
+    lastPointer.current = { x: e.clientX, y: e.clientY }
   }, [])
 
   useEffect(() => {
-    const offsetX = 20, offsetY = 20
+    function activateDrag(d: NonNullable<typeof ptrRef.current>) {
+      // create ghost clone
+      const rect = d.sourceEl.getBoundingClientRect()
+      const ghost = d.sourceEl.cloneNode(true) as HTMLElement
+      ghost.style.cssText = `position:fixed;left:${rect.left}px;top:${rect.top}px;width:${rect.width}px;pointer-events:none;z-index:9999;opacity:.85;border-radius:9px;box-shadow:0 8px 32px rgba(0,0,0,.22);transform:rotate(2deg) scale(1.03);transition:none;`
+      document.body.appendChild(ghost)
+      d.ghost = ghost
+      // start auto-scroll loop
+      const tick = () => {
+        if (!ptrRef.current) return
+        const { y } = lastPointer.current
+        const vh = window.innerHeight
+        if (y < SCROLL_EDGE) {
+          const speed = SCROLL_SPEED * (1 - y / SCROLL_EDGE)
+          window.scrollBy(0, -speed)
+          // also scroll any nearest scroll parent
+          scrollRef.current?.scrollBy(0, -speed)
+        } else if (y > vh - SCROLL_EDGE) {
+          const speed = SCROLL_SPEED * (1 - (vh - y) / SCROLL_EDGE)
+          window.scrollBy(0, speed)
+          scrollRef.current?.scrollBy(0, speed)
+        }
+        d.rafId = requestAnimationFrame(tick)
+      }
+      d.rafId = requestAnimationFrame(tick)
+      setDraggingId(d.taskId)
+      setDragSlot(null)
+    }
 
     function onMove(e: PointerEvent) {
       const d = ptrRef.current
       if (!d) return
+      lastPointer.current = { x: e.clientX, y: e.clientY }
+
+      // Drag not yet activated — check intent
+      if (!d.ghost) {
+        const dx = Math.abs(e.clientX - d.startX)
+        const dy = Math.abs(e.clientY - d.startY)
+        // If horizontal movement wins past the threshold, abandon — let scroll happen
+        if (dx > DRAG_THRESHOLD && dx > dy) {
+          ptrRef.current = null
+          return
+        }
+        // Vertical dominant past threshold → start drag
+        if (dy > DRAG_THRESHOLD && dy > dx) {
+          // Capture pointer now so subsequent moves don't go to scrollers
+          try { d.sourceEl.setPointerCapture(d.pointerId) } catch {}
+          activateDrag(d)
+        }
+        return
+      }
+
+      // Active drag — move ghost & update preview
+      const offsetX = 20, offsetY = 20
       d.ghost.style.left = `${e.clientX - offsetX}px`
       d.ghost.style.top  = `${e.clientY - offsetY}px`
-      if (isOverTimeline(e.clientX, e.clientY)) {
+      if (isOverEl(timelineRef.current, e.clientX, e.clientY)) {
         setDragSlot(snapToSlot(e.clientY))
       } else {
         setDragSlot(null)
@@ -404,12 +470,21 @@ export default function TimeboxView() {
     function onUp(e: PointerEvent) {
       const d = ptrRef.current
       if (!d) return
+      // If drag never activated, just clear state — onClick / scroll still works
+      if (!d.ghost) { ptrRef.current = null; return }
+
+      if (d.rafId !== null) cancelAnimationFrame(d.rafId)
       d.ghost.remove()
-      ptrRef.current = null
-      if (isOverTimeline(e.clientX, e.clientY)) {
+
+      if (isOverEl(timelineRef.current, e.clientX, e.clientY)) {
         const slot = snapToSlot(e.clientY)
         setScheduled(prev => [...prev.filter(s => s.taskId !== d.taskId), { taskId: d.taskId, startMin: slot, durMin: d.durMin }])
+      } else if (isOverEl(unscheduledRef.current, e.clientX, e.clientY)) {
+        // Dropped on Unscheduled — remove from timeline
+        setScheduled(prev => prev.filter(s => s.taskId !== d.taskId))
       }
+
+      ptrRef.current = null
       setDraggingId(null)
       setDragSlot(null)
     }
@@ -421,6 +496,7 @@ export default function TimeboxView() {
       window.removeEventListener('pointermove', onMove)
       window.removeEventListener('pointerup',   onUp)
       window.removeEventListener('pointercancel', onUp)
+      if (ptrRef.current?.rafId != null) cancelAnimationFrame(ptrRef.current.rafId)
     }
   }, [])
 
@@ -473,11 +549,11 @@ export default function TimeboxView() {
           <div style={{ fontSize: '.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.6px', color: 'var(--mui-palette-text-disabled)', marginBottom: 10 }}>
             Unscheduled · {unscheduled.length}
           </div>
-          <div style={{ display: 'flex', flexDirection: compact ? 'row' : 'column', gap: 7, overflowX: compact ? 'auto' : 'visible', paddingBottom: compact ? 4 : 0 }}>
+          <div ref={unscheduledRef} style={{ display: 'flex', flexDirection: compact ? 'row' : 'column', gap: 7, overflowX: compact ? 'auto' : 'visible', paddingBottom: compact ? 4 : 0 }}>
             {unscheduled.map(t => (
               <div key={t.id}
                 onPointerDown={e => onCardPointerDown(e, t.id, t.dur)}
-                style={{ background: 'var(--mui-palette-background-paper)', borderRadius: 9, padding: '10px 12px', boxShadow: '0 1px 6px rgba(47,43,61,.08)', cursor: 'grab', border: `1.5px solid ${draggingId === t.id ? 'var(--mui-palette-primary-main)' : 'transparent'}`, opacity: draggingId === t.id ? 0.5 : 1, transition: 'opacity 150ms', flexShrink: compact ? 0 : undefined, minWidth: compact ? 180 : undefined, touchAction: 'none', userSelect: 'none' }}>
+                style={{ background: 'var(--mui-palette-background-paper)', borderRadius: 9, padding: '10px 12px', boxShadow: '0 1px 6px rgba(47,43,61,.08)', cursor: 'grab', border: `1.5px solid ${draggingId === t.id ? 'var(--mui-palette-primary-main)' : 'transparent'}`, opacity: draggingId === t.id ? 0.5 : 1, transition: 'opacity 150ms', flexShrink: compact ? 0 : undefined, minWidth: compact ? 180 : undefined, touchAction: compact ? 'pan-x' : 'none', userSelect: 'none' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
                   <span style={{ fontSize: '.8125rem', fontWeight: 600, color: 'var(--mui-palette-text-primary)', flex: 1, lineHeight: 1.3 }}>{t.title}</span>
                   <PriorityDot priority={t.priority} />
