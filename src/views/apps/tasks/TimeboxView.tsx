@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useBreakpoint, isMobile, isTablet } from '@/hooks/useBreakpoint'
 import type { Task, DayTemplate, TemplateBlock, TimeboxEntry } from './taskData'
 import {
@@ -334,15 +334,18 @@ export default function TimeboxView() {
   const [showPanel,  setShowPanel]  = useState(false)
   const [editingTpl, setEditingTpl] = useState<DayTemplate | null>(null)
   const [showEditor, setShowEditor] = useState(false)
-  const [dragging,   setDragging]   = useState<{ taskId: number; durMin: number } | null>(null)
-  const [dragOver,   setDragOver]   = useState<number | null>(null)
+  // draggingId: which task is being dragged (faded); dragSlot: snapped minute slot for ghost
+  const [draggingId, setDraggingId] = useState<number | null>(null)
+  const [dragSlot,   setDragSlot]   = useState<number | null>(null)
   const [now,        setNow]        = useState(nowMinutes())
   const timelineRef = useRef<HTMLDivElement>(null)
   const scrollRef   = useRef<HTMLDivElement>(null)
-  const bp          = useBreakpoint()
-  const mobile      = isMobile(bp)
-  const tablet      = isTablet(bp)
-  const compact     = mobile || tablet   // single-column layout
+  // pointer drag state
+  const ptrRef = useRef<{ taskId: number; durMin: number; ghost: HTMLElement } | null>(null)
+  const bp      = useBreakpoint()
+  const mobile  = isMobile(bp)
+  const tablet  = isTablet(bp)
+  const compact = mobile || tablet
 
   useEffect(() => {
     const t = setInterval(() => setNow(nowMinutes()), 30000)
@@ -354,22 +357,72 @@ export default function TimeboxView() {
   const unscheduled    = ALL_TASKS.filter(t => t.status !== 'done' && !scheduledIds.has(t.id))
   const totalPlanned   = scheduled.reduce((a, s) => a + s.durMin, 0)
 
-  function snapToSlot(y: number) {
+  function snapToSlot(clientY: number) {
     if (!timelineRef.current) return 0
     const rect      = timelineRef.current.getBoundingClientRect()
     const scrollTop = scrollRef.current?.scrollTop ?? 0
-    const relY      = Math.max(0, y - rect.top + scrollTop - 8)
+    const relY      = Math.max(0, clientY - rect.top + scrollTop - 8)
     const mins      = Math.round((relY / HOUR_PX) * 60 / 15) * 15
     return Math.min(Math.max(0, mins), TOTAL_MINS - 15)
   }
 
-  function onTimelineDrop(e: React.DragEvent) {
-    e.preventDefault()
-    if (!dragging || !timelineRef.current) return
-    const snapMin = snapToSlot(e.clientY)
-    setScheduled(prev => [...prev.filter(s => s.taskId !== dragging.taskId), { taskId: dragging.taskId, startMin: snapMin, durMin: dragging.durMin }])
-    setDragging(null); setDragOver(null)
+  function isOverTimeline(clientX: number, clientY: number) {
+    if (!timelineRef.current) return false
+    const rect = timelineRef.current.getBoundingClientRect()
+    return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom
   }
+
+  // Pointer-based drag — works on mouse and touch
+  const onCardPointerDown = useCallback((e: React.PointerEvent, taskId: number, durMin: number) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return
+    e.currentTarget.setPointerCapture(e.pointerId)
+    const src  = e.currentTarget as HTMLElement
+    const rect = src.getBoundingClientRect()
+    const ghost = src.cloneNode(true) as HTMLElement
+    ghost.style.cssText = `position:fixed;left:${rect.left}px;top:${rect.top}px;width:${rect.width}px;pointer-events:none;z-index:9999;opacity:.85;border-radius:9px;box-shadow:0 8px 32px rgba(0,0,0,.22);transform:rotate(2deg) scale(1.03);transition:none;`
+    document.body.appendChild(ghost)
+    ptrRef.current = { taskId, durMin, ghost }
+    setDraggingId(taskId)
+    setDragSlot(null)
+  }, [])
+
+  useEffect(() => {
+    const offsetX = 20, offsetY = 20
+
+    function onMove(e: PointerEvent) {
+      const d = ptrRef.current
+      if (!d) return
+      d.ghost.style.left = `${e.clientX - offsetX}px`
+      d.ghost.style.top  = `${e.clientY - offsetY}px`
+      if (isOverTimeline(e.clientX, e.clientY)) {
+        setDragSlot(snapToSlot(e.clientY))
+      } else {
+        setDragSlot(null)
+      }
+    }
+
+    function onUp(e: PointerEvent) {
+      const d = ptrRef.current
+      if (!d) return
+      d.ghost.remove()
+      ptrRef.current = null
+      if (isOverTimeline(e.clientX, e.clientY)) {
+        const slot = snapToSlot(e.clientY)
+        setScheduled(prev => [...prev.filter(s => s.taskId !== d.taskId), { taskId: d.taskId, startMin: slot, durMin: d.durMin }])
+      }
+      setDraggingId(null)
+      setDragSlot(null)
+    }
+
+    window.addEventListener('pointermove', onMove)
+    window.addEventListener('pointerup',   onUp)
+    window.addEventListener('pointercancel', onUp)
+    return () => {
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerup',   onUp)
+      window.removeEventListener('pointercancel', onUp)
+    }
+  }, [])
 
   function removeScheduled(taskId: number) { setScheduled(p => p.filter(s => s.taskId !== taskId)) }
 
@@ -422,10 +475,9 @@ export default function TimeboxView() {
           </div>
           <div style={{ display: 'flex', flexDirection: compact ? 'row' : 'column', gap: 7, overflowX: compact ? 'auto' : 'visible', paddingBottom: compact ? 4 : 0 }}>
             {unscheduled.map(t => (
-              <div key={t.id} draggable
-                onDragStart={() => setDragging({ taskId: t.id, durMin: t.dur })}
-                onDragEnd={() => { setDragging(null); setDragOver(null) }}
-                style={{ background: 'var(--mui-palette-background-paper)', borderRadius: 9, padding: '10px 12px', boxShadow: '0 1px 6px rgba(47,43,61,.08)', cursor: 'grab', border: `1.5px solid ${dragging?.taskId === t.id ? 'var(--mui-palette-primary-main)' : 'transparent'}`, opacity: dragging?.taskId === t.id ? 0.5 : 1, transition: 'all 150ms', flexShrink: compact ? 0 : undefined, minWidth: compact ? 180 : undefined }}>
+              <div key={t.id}
+                onPointerDown={e => onCardPointerDown(e, t.id, t.dur)}
+                style={{ background: 'var(--mui-palette-background-paper)', borderRadius: 9, padding: '10px 12px', boxShadow: '0 1px 6px rgba(47,43,61,.08)', cursor: 'grab', border: `1.5px solid ${draggingId === t.id ? 'var(--mui-palette-primary-main)' : 'transparent'}`, opacity: draggingId === t.id ? 0.5 : 1, transition: 'opacity 150ms', flexShrink: compact ? 0 : undefined, minWidth: compact ? 180 : undefined, touchAction: 'none', userSelect: 'none' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
                   <span style={{ fontSize: '.8125rem', fontWeight: 600, color: 'var(--mui-palette-text-primary)', flex: 1, lineHeight: 1.3 }}>{t.title}</span>
                   <PriorityDot priority={t.priority} />
@@ -468,10 +520,7 @@ export default function TimeboxView() {
 
             {/* Drop zone */}
             <div style={{ flex: 1, position: 'relative', paddingTop: 8, paddingRight: 16, minHeight: (DAY_END - DAY_START) * HOUR_PX }}
-              ref={timelineRef}
-              onDragOver={e => { e.preventDefault(); setDragOver(snapToSlot(e.clientY)) }}
-              onDragLeave={() => setDragOver(null)}
-              onDrop={onTimelineDrop}>
+              ref={timelineRef}>
 
               {Array.from({ length: DAY_END - DAY_START }, (_, i) => (
                 <div key={i} style={{ position: 'absolute', top: 8 + i * HOUR_PX, left: 0, right: 16, height: 1, background: 'var(--mui-palette-divider)' }} />
@@ -500,9 +549,10 @@ export default function TimeboxView() {
                 </div>
               )}
 
-              {dragging && dragOver !== null && (
-                <div style={{ position: 'absolute', left: 4, right: 0, top: 8 + (dragOver / 60) * HOUR_PX, height: (dragging.durMin / 60) * HOUR_PX, background: 'rgba(201,124,74,.15)', border: '1.5px dashed var(--mui-palette-primary-main)', borderRadius: 8, pointerEvents: 'none', zIndex: 4 }} />
-              )}
+              {draggingId !== null && dragSlot !== null && (() => {
+                const dur = (ptrRef.current?.durMin ?? scheduled.find(s => s.taskId === draggingId)?.durMin ?? 60)
+                return <div style={{ position: 'absolute', left: 4, right: 0, top: 8 + (dragSlot / 60) * HOUR_PX, height: (dur / 60) * HOUR_PX, background: 'rgba(201,124,74,.15)', border: '1.5px dashed var(--mui-palette-primary-main)', borderRadius: 8, pointerEvents: 'none', zIndex: 4 }} />
+              })()}
 
               {scheduled.map(s => {
                 const task = ALL_TASKS.find(t => t.id === s.taskId)
@@ -511,10 +561,9 @@ export default function TimeboxView() {
                 const height = Math.max((s.durMin / 60) * HOUR_PX - 3, 22)
                 const endMin = s.startMin + s.durMin
                 return (
-                  <div key={s.taskId} draggable
-                    onDragStart={() => setDragging({ taskId: s.taskId, durMin: s.durMin })}
-                    onDragEnd={() => { setDragging(null); setDragOver(null) }}
-                    style={{ position: 'absolute', left: 4, right: 0, top, height, background: `${task.tagColor}20`, border: `1.5px solid ${task.tagColor}60`, borderLeft: `3px solid ${task.tagColor}`, borderRadius: 7, padding: '4px 8px', cursor: 'grab', zIndex: 3, overflow: 'hidden' }}>
+                  <div key={s.taskId}
+                    onPointerDown={e => onCardPointerDown(e, s.taskId, s.durMin)}
+                    style={{ position: 'absolute', left: 4, right: 0, top, height, background: `${task.tagColor}20`, border: `1.5px solid ${task.tagColor}60`, borderLeft: `3px solid ${task.tagColor}`, borderRadius: 7, padding: '4px 8px', cursor: 'grab', zIndex: 3, overflow: 'hidden', touchAction: 'none', userSelect: 'none', opacity: draggingId === s.taskId ? 0.4 : 1 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <span style={{ fontSize: '.7rem', fontWeight: 700, color: 'var(--mui-palette-text-primary)', lineHeight: 1.3 }}>{task.title}</span>
                       <button onClick={() => removeScheduled(s.taskId)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--mui-palette-text-disabled)', fontSize: 12, lineHeight: 1, padding: 0, flexShrink: 0 }}>×</button>
