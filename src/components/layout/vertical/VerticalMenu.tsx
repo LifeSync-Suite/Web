@@ -130,14 +130,11 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
 
         {/* Finance */}
         <MenuSection label='Finance'>
-          <MenuItem
-            href={`/${locale}/apps/goals`}
-            icon={<i className='tabler-report-money' />}
-          >
+          <MenuItem href={`/${locale}/apps/wealth`} icon={<i className='tabler-report-money' />}>
             Wealth
           </MenuItem>
           <MenuItem
-            href={`/${locale}/apps/goals`}
+            href={`/${locale}/apps/projects`}
             icon={<i className='tabler-briefcase' />}
             suffix={<CustomChip label='NEW' size='small' color='warning' round='true' />}
           >
