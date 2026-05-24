@@ -104,6 +104,13 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
             Goals
           </MenuItem>
           <MenuItem
+            href={`/${locale}/apps/decisions`}
+            icon={<i className='tabler-compass' />}
+            suffix={<CustomChip label='NEW' size='small' color='warning' round='true' />}
+          >
+            Decisions
+          </MenuItem>
+          <MenuItem
             href={`/${locale}/apps/habits`}
             icon={<i className='tabler-flame' />}
             suffix={<CustomChip label='12d' size='small' color='success' round='true' />}
@@ -118,6 +125,26 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
           </MenuItem>
           <MenuItem href={`/${locale}/apps/calendar`} icon={<i className='tabler-calendar' />}>
             Calendar
+          </MenuItem>
+        </MenuSection>
+
+        {/* Finance */}
+        <MenuSection label='Finance'>
+          <MenuItem
+            href={`/${locale}/apps/goals`}
+            icon={<i className='tabler-report-money' />}
+          >
+            Wealth
+          </MenuItem>
+          <MenuItem
+            href={`/${locale}/apps/goals`}
+            icon={<i className='tabler-briefcase' />}
+            suffix={<CustomChip label='NEW' size='small' color='warning' round='true' />}
+          >
+            Projects
+          </MenuItem>
+          <MenuItem href={`/${locale}/dashboards/analytics`} icon={<i className='tabler-chart-line' />}>
+            Analytics
           </MenuItem>
         </MenuSection>
 
