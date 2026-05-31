@@ -8,7 +8,6 @@ import type { NotificationsType } from '@components/layout/shared/NotificationsD
 // Component Imports
 import NavToggle from './NavToggle'
 import NavSearch from '@components/layout/shared/search'
-import LanguageDropdown from '@components/layout/shared/LanguageDropdown'
 import RegionDropdown from '@components/layout/shared/RegionDropdown'
 import CurrencyDropdown from '@components/layout/shared/CurrencyDropdown'
 import ModeDropdown from '@components/layout/shared/ModeDropdown'
@@ -114,10 +113,9 @@ const NavbarContent = () => {
         <NavToggle />
         <NavSearch />
       </div>
-      <div className='flex items-center'>
+      <div className='flex items-center gap-2'>
         <RegionDropdown />
         <CurrencyDropdown />
-        <LanguageDropdown />
         <ModeDropdown />
         <ShortcutsDropdown shortcuts={shortcuts} />
         <NotificationsDropdown notifications={notifications} />
