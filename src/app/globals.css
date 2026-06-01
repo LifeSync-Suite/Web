@@ -131,3 +131,34 @@ code {
   background-color: rgb(var(--mui-palette-info-mainChannel) / 0.08);
   border: 0;
 }
+
+/*
+  Global "press" feedback — buttons scale down slightly while held, matching the
+  design system (button:active { transform: scale(0.98) }). Scoped to actual
+  buttons (native <button>, MUI Button/IconButton/Fab/ToggleButton, and
+  role="button" elements) so it never affects Checkbox/Radio/Switch/Tab/MenuItem,
+  which also derive from MuiButtonBase. Disabled controls are excluded, and the
+  effect is removed for reduced-motion users.
+
+  We compose transform onto MUI's existing transitions instead of replacing them,
+  so background-color/box-shadow animations are preserved.
+*/
+:where(button, [role='button'], .MuiButton-root, .MuiIconButton-root, .MuiFab-root, .MuiToggleButton-root):not(
+    :disabled
+  ):not([aria-disabled='true']):not(.Mui-disabled) {
+  transition-property: transform, background-color, box-shadow, border-color, color, opacity;
+  transition-duration: 150ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:where(button, [role='button'], .MuiButton-root, .MuiIconButton-root, .MuiFab-root, .MuiToggleButton-root):not(
+    :disabled
+  ):not([aria-disabled='true']):not(.Mui-disabled):active {
+  transform: scale(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(button, [role='button'], .MuiButton-root, .MuiIconButton-root, .MuiFab-root, .MuiToggleButton-root):active {
+    transform: none;
+  }
+}

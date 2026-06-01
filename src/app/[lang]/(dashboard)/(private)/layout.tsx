@@ -15,8 +15,6 @@ import Providers from '@components/Providers'
 import Navigation from '@components/layout/vertical/Navigation'
 import Header from '@components/layout/horizontal/Header'
 import Navbar from '@components/layout/vertical/Navbar'
-import VerticalFooter from '@components/layout/vertical/Footer'
-import HorizontalFooter from '@components/layout/horizontal/Footer'
 import Customizer from '@core/components/customizer'
 import ScrollToTop from '@core/components/scroll-to-top'
 import AuthGuard from '@/hocs/AuthGuard'
@@ -44,15 +42,12 @@ const Layout = async ({ children, params }: ChildrenType & { params: { lang: Loc
             <VerticalLayout
               navigation={<Navigation dictionary={dictionary} mode={mode} systemMode={systemMode} />}
               navbar={<Navbar />}
-              footer={<VerticalFooter />}
             >
               {children}
             </VerticalLayout>
           }
           horizontalLayout={
-            <HorizontalLayout header={<Header dictionary={dictionary} />} footer={<HorizontalFooter />}>
-              {children}
-            </HorizontalLayout>
+            <HorizontalLayout header={<Header dictionary={dictionary} />}>{children}</HorizontalLayout>
           }
         />
         <ScrollToTop className='mui-fixed'>
