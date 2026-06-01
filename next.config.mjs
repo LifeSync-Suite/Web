@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   basePath: process.env.BASEPATH,
+  eslint: {
+    // Skip ESLint during `next build`. Lint manually with `npm run lint`.
+    ignoreDuringBuilds: true
+  },
   redirects: async () => {
     return [
       // /app → dashboard entry point
